@@ -97,6 +97,8 @@ stop and ask before proceeding.
   `visdrone_val500.txt`, `visdrone_manifest.json`,
   `adapters/yolo26n_visdrone_scratch/configs/yolo26n-visdrone.yaml`
                                                  — Tier-3 dataset/model locks
+- `trajectory/inherited_v5_scientific.md`  — frozen inherited record (and
+  SEALED until baseline.json is committed — see P0)
 - The dataset itself (`/home/atuin/v134ce/v134ce15/datasets/VisDrone`)
 - Anything outside this project tree             — completely off-limits
 - Other trajectory dirs (`../autovidya_v5/`, `../AV_P1_YOLO/`, `../ultralytics_src/`,
@@ -175,6 +177,14 @@ stop and ask before proceeding.
   `analysis.candidate_failure_modes` — built from the from-scratch baseline
   (exp000, both seed sets), not from any pretrained model's behavior, and
   not from COCO-2k's failure modes: VisDrone's `fm_*` ids are measured HERE.
+  **Anti-anchoring seal (user-authorized 2026-08-21):**
+  `trajectory/inherited_v5_scientific.md` (the COCO-2k scientific results)
+  may NOT be read until baseline.json's failure modes are committed — a
+  diagnosing session that has read the COCO failure-mode narrative is primed
+  to find the same structure. After baseline.json is committed, that file is
+  REQUIRED reading for Phase-1 (P8 re-test arguments cite it). The pivot
+  rationale in this document's hypothesis paragraph is unavoidably known;
+  the seal covers the detailed findings, which is where priming lives.
 - **P6' (gradient-flow check).** Before the screen, the adapter's
   `gradient_flow_check` must pass: the mechanism's parameters receive
   gradients. Failure = Op-Fail (`gradient-dead`), no budget spent.
@@ -445,10 +455,13 @@ Every experiment writes:
    `stale` insights when proposing. Never edit an insight's claim in place —
    supersede it with a new entry citing the new evidence.
    `inherited` is reserved for the seed entries carried over from prior
-   trajectories (here: the COCO-2k pool): they are exempt from the exp-id
-   rule (their evidence lives in `../autovidya_v5`), advisory only, never
-   citable as evidence for any classification, and never counted by P2 or
-   P3.
+   trajectories: they are exempt from the exp-id rule (their evidence lives
+   in `../autovidya_v5`), advisory only, never citable as evidence for any
+   classification, and never counted by P2 or P3. The inherited pool is
+   split by kind: operational + methodology entries live in `insights.md`
+   (active from day one); scientific COCO-2k results live in
+   `trajectory/inherited_v5_scientific.md`, SEALED until baseline.json is
+   committed (P0).
 
 ## Phase-1 exit criterion (trajectory end state)
 
@@ -483,8 +496,11 @@ silently promoted.
    memory log (this trajectory's regret entries live there, nowhere else) —
    and `trajectory/insights.md` (skip `stale` entries; treat `inherited`
    entries as advisory), plus any existing experiment JSONs.
-4. `trajectory/screen_audit.json` if present.
+4. `trajectory/inherited_v5_scientific.md` — **ONLY IF baseline.json's
+   candidate failure modes are already committed** (P0 seal). Before that
+   point, stop at its header. Once open, it is required Phase-1 reading.
+5. `trajectory/screen_audit.json` if present.
 
-Don't propose anything before reading 1–4. Prior-trajectory regret is
-carried only through the `inherited` insight entries — do not go reading
-other trajectory directories for it.
+Don't propose anything before reading 1–5. Prior-trajectory regret is
+carried only through the `inherited` insight entries and the sealed
+scientific file — do not go reading other trajectory directories for it.

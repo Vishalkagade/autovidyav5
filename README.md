@@ -81,7 +81,9 @@ autovidya_visdrone/
 └── trajectory/                             # ALL agent-writable state
     ├── experiments/                        #   per-experiment JSONs
     ├── profiles/                           #   baseline + calibration profiles
-    ├── insights.md                         #   insight pool (inherited v5 entries seeded)
+    ├── insights.md                         #   insight pool (inherited ops/methodology entries)
+    ├── inherited_v5_scientific.md          #   COCO-2k scientific results — SEALED until P0 done
+
     ├── index.json                          #   CWM log
     └── scratch/                            #   per-experiment scratch space
 ```
