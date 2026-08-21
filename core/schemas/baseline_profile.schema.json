@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "baseline_profile.schema.json",
+  "title": "BaselineProfile",
+  "description": "Phase-0 artifact. Diagnostic profile of the vanilla baseline model BEFORE any mechanism is proposed. Adapter writes `data`; agent writes `analysis`. P0 discipline blocks Phase-1 until this file exists with a non-empty `analysis.candidate_failure_modes`.",
+  "type": "object",
+  "required": ["adapter_name", "baseline_id", "data", "analysis"],
+  "properties": {
+    "adapter_name": { "type": "string" },
+    "baseline_id": {
+      "type": "string",
+      "description": "Stable id for the baseline state (e.g. 'yolov8s_pretrained')."
+    },
+    "generated_at": { "type": "string", "format": "date-time" },
+
+    "data": {
+      "type": "object",
+      "description": "Adapter-produced raw data. Sections that the adapter cannot produce (raise NotImplementedError) are simply absent — the agent reads what's available and notes the gap.",
+      "properties": {
+
+        "primary_metric": {
+          "type": "object",
+          "required": ["name", "value", "seeds", "spread"],
+          "properties": {
+            "name": { "type": "string" },
+            "value": { "type": "number", "description": "seed-averaged" },
+            "seeds": { "type": "array", "items": { "type": "integer" } },
+            "spread": { "type": "number", "description": "max - min across seeds" }
+          }
+        },
+
+        "per_class_metric": {
+          "type": "array",
+          "description": "One entry per class. Sorted ascending by `value` is conventional but not required.",
+          "items": {
+            "type": "object",
+            "required": ["class_name", "value"],
+            "properties": {
+              "class_name": { "type": "string" },
+              "value": { "type": "number" },
+              "support_count": {
+                "type": "integer",
+                "description": "Number of test units containing this class."
+              }
+            }
+          }
+        },
+
+        "per_scale_metric": {
+          "type": "object",
+          "description": "Adapter-defined scale buckets. COCO convention: small/medium/large.",
+          "additionalProperties": { "type": "number" }
+        },
+
+        "per_site_recall_contribution": {
+          "type": "array",
+          "description": "If the model has multi-scale heads (FPN), recall contribution per head.",
+          "items": {
+            "type": "object",
+            "required": ["site", "value"],
+            "properties": {
+              "site": { "type": "string" },
+              "value": { "type": "number" },
+              "metric_name": { "type": "string" }
+            }
+          }
+        },
+
+        "loss_decomposition": {
+          "type": "object",
+          "description": "Loss-term magnitudes at end-of-training. Keys are adapter-defined (e.g. 'box', 'cls', 'obj' for YOLO).",
+          "additionalProperties": { "type": "number" }
+        },
+
+        "top_failure_units": {
+          "type": "array",
+          "description": "K worst test units by primary metric. Used as evidence for candidate_failure_modes.",
+          "items": {
+            "type": "object",
+            "required": ["unit_id", "value"],
+            "properties": {
+              "unit_id": { "type": "string" },
+              "value": { "type": "number" },
+              "tags": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Adapter-supplied tags, e.g. ['small_box', 'dense_scene', 'rare_class']."
+              }
+            }
+          }
+        },
+
+        "model_topology_summary": {
+          "type": "object",
+          "description": "Inline copy of the subset of adapter.describe_model() relevant for failure attribution. Optional convenience for the agent."
+        }
+      }
+    },
+
+    "analysis": {
+      "type": "object",
+      "description": "Agent-produced interpretation. Required: candidate_failure_modes (the bridge to Phase-1).",
+      "required": ["candidate_failure_modes"],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Plain-English summary of what the diagnostic data shows."
+        },
+        "candidate_failure_modes": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Hypothesized failure modes of the BASELINE. Phase-1 experiments cite these IDs in `cites_baseline_finding_ids`. Same shape as anchor_profile failure_mode_ids.",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "evidence"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^fm_[a-z0-9_]+$",
+                "description": "e.g. 'fm_small_box_recall_drop'."
+              },
+              "label": { "type": "string" },
+              "description": { "type": "string" },
+              "evidence": {
+                "type": "string",
+                "description": "Cite the data section that supports this. e.g. 'per_scale_metric.small=0.21 vs large=0.58; top_failure_units 12/20 tagged small_box'."
+              },
+              "evidence_unit_ids": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "suggested_intervention_modes": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Optional. e.g. ['patch-mode@neck.c2f_15 for P3-feature enhancement', 'R2-aux: scale-balanced focal loss']. Advisory only."
+              }
+            }
+          }
+        },
+        "gaps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Diagnostic sections that were unavailable (NotImplementedError) — useful for prioritizing adapter work."
+        }
+      }
+    }
+  }
+}

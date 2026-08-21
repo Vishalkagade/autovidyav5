@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "anchor_profile.schema.json",
+  "title": "AnchorProfile",
+  "description": "Diagnostic profile of an anchor mechanism. Written by P7 before Phase-2 starts. Refinements in Phase-2 must cite failure_mode_ids from this file.",
+  "type": "object",
+  "required": [
+    "anchor_id",
+    "adapter_name",
+    "anchor_metric",
+    "baseline_metric",
+    "per_unit_deltas",
+    "failure_mode_ids"
+  ],
+  "properties": {
+    "anchor_id": {
+      "type": "string",
+      "description": "Stable identifier for the anchor mechanism (e.g. 'H15_rayleigh' or 'exp020_sinkhorn_mild')."
+    },
+    "adapter_name": {
+      "type": "string",
+      "description": "Adapter that produced this profile, e.g. 'yolov8s_coco2k'."
+    },
+    "anchor_metric": {
+      "type": "object",
+      "required": ["name", "value", "multi_seed_spread", "seeds"],
+      "properties": {
+        "name": { "type": "string", "description": "Adapter primary_metric_name." },
+        "value": { "type": "number" },
+        "multi_seed_spread": { "type": "number", "description": "max - min across seeds." },
+        "seeds": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "baseline_metric": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "type": "number" }
+      }
+    },
+    "per_unit_deltas": {
+      "type": "array",
+      "description": "One entry per test unit (image, image-class pair, etc.). Opaque unit_id strings.",
+      "items": {
+        "type": "object",
+        "required": ["unit_id", "anchor", "baseline", "delta"],
+        "properties": {
+          "unit_id": { "type": "string" },
+          "anchor": { "type": "number" },
+          "baseline": { "type": "number" },
+          "delta": { "type": "number", "description": "anchor - baseline." }
+        }
+      }
+    },
+    "per_site_stats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["site"],
+        "properties": {
+          "site": { "type": "string", "description": "Site name from adapter.sites()." },
+          "act_l2_mean": { "type": "number" },
+          "act_l2_std": { "type": "number" },
+          "delta_norm_vs_baseline": { "type": "number" }
+        }
+      }
+    },
+    "mechanism_activation_stats": {
+      "type": "object",
+      "description": "Distribution stats over the injected mechanism's output. Empty if irrelevant.",
+      "additionalProperties": { "type": "number" }
+    },
+    "failure_mode_ids": {
+      "type": "array",
+      "description": "Hypothesized failure modes of the anchor. Phase-2 refinements must target one of these.",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^fm_[a-z0-9_]+$", "description": "Stable kebab-style id, e.g. 'fm_small_box_recall_drop'." },
+          "label": { "type": "string", "description": "Human-readable summary." },
+          "description": { "type": "string" },
+          "evidence_unit_ids": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "generated_at": { "type": "string", "format": "date-time" }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "insights.schema.json",
+  "title": "Insight",
+  "description": "Falsifiable lesson harvested from a failed experiment. Negative-result harvest schema (B5).",
+  "type": "object",
+  "required": ["id", "claim", "evidence_experiment_ids", "scope"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^ins_[0-9]{3,}$",
+      "description": "e.g. 'ins_004'."
+    },
+    "claim": {
+      "type": "string",
+      "maxLength": 280,
+      "description": "One-sentence falsifiable statement. e.g. 'Rayleigh-formula deepening at dec1 saturates.'"
+    },
+    "evidence_experiment_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^exp[0-9]{3,}$" },
+      "minItems": 1,
+      "description": "Experiments that support the claim."
+    },
+    "prunes": {
+      "type": "array",
+      "description": "Search-space constraints emitted by this insight. Future proposals must check these.",
+      "items": {
+        "type": "object",
+        "required": ["axis"],
+        "properties": {
+          "axis": {
+            "enum": [
+              "R1-formula",
+              "R1-position",
+              "R1-paramcount",
+              "R2-aux",
+              "R3-coupling",
+              "R4-cross-domain"
+            ]
+          },
+          "filter": {
+            "type": "string",
+            "description": "Adapter-defined filter expression (e.g. 'site=dec1' or 'site~^backbone.*')."
+          }
+        }
+      }
+    },
+    "scope": {
+      "enum": ["this_trajectory", "model_family", "harness_universal"],
+      "description": "How widely this insight applies. Default 'this_trajectory'."
+    },
+    "expires_at": {
+      "type": ["string", "null"],
+      "description": "experiment_id after which to re-evaluate. null = no expiry."
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

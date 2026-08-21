@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "experiment.schema.json",
+  "title": "Experiment",
+  "description": "Per-experiment record for the from-scratch bold regime. The `classification` enum IS the vocabulary table in program.md — if one changes, the other must change in the same commit. Gate objects: novelty_audit (P8, required before Stage-1), p9 + p10 (required for any classification above Hold), p11 (required for Winner or Fragile), stage1_curve (P12, required for every Kill).",
+  "type": "object",
+  "required": [
+    "id",
+    "phase",
+    "adapter_name",
+    "mechanism",
+    "stages_run",
+    "metrics_per_stage_per_seed",
+    "classification",
+    "attribution",
+    "provenance"
+  ],
+  "$defs": {
+    "p10_test": {
+      "type": "object",
+      "description": "One paired per-unit test result (core/discipline/p10_stats_gate.paired_unit_test).",
+      "required": ["n_units", "mean_diff", "median_diff", "ci95", "wilcoxon_p", "verdict"],
+      "properties": {
+        "n_units": { "type": "integer", "minimum": 1 },
+        "mean_diff": { "type": "number" },
+        "median_diff": { "type": "number" },
+        "ci95": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[low, high] of the bootstrap 95% CI on the seed-averaged per-unit diff."
+        },
+        "wilcoxon_p": {
+          "type": ["number", "null"],
+          "description": "null only when scipy was unavailable (bootstrap CI stands alone)."
+        },
+        "per_seed_means": {
+          "type": "object",
+          "patternProperties": { "^[0-9]+$": { "type": "number" } },
+          "description": "Mean per-unit delta per seed (favorable = positive), from paired_unit_test. REQUIRED on vs_baseline for Winner track: every working seed must be favorable — this is the exit criterion's multi-seed clause."
+        },
+        "verdict": {
+          "enum": ["pass", "direction-consistent-ns", "unfavorable"],
+          "description": "pass = CI excludes 0 favorably AND wilcoxon_p < 0.05."
+        }
+      }
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^exp[0-9]{3,}$",
+      "description": "e.g. 'exp001'."
+    },
+    "phase": { "enum": ["phase-0", "phase-1"] },
+    "adapter_name": { "type": "string" },
+    "mechanism": {
+      "type": "object",
+      "required": ["name", "source_domain", "kind", "site", "params_count"],
+      "properties": {
+        "name": { "type": "string" },
+        "source_domain": {
+          "type": "string",
+          "description": "Non-CV/ML source domain, e.g. 'wireless_comms', 'optimal_transport'. exp000 (baseline) uses 'none'."
+        },
+        "kind": {
+          "enum": ["baseline", "site_wrap", "aux_objective", "topology"],
+          "description": "Matches adapter.inject_mechanism's spec kinds; 'baseline' is exp000 only."
+        },
+        "family": {
+          "type": "string",
+          "description": "Coarse mechanism class, e.g. 'predictive-correction', 'lateral-inhibition'. The class key P2 uses to track class-site saturation — keep it stable across experiments of the same class."
+        },
+        "site": {
+          "type": ["string", "null"],
+          "description": "A name from adapter.sites() for site_wrap; null for aux_objective/topology/baseline."
+        },
+        "params_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Params ADDED over the baseline (the P9 budget number)."
+        }
+      }
+    },
+    "cites_baseline_finding_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^fm_[a-z0-9_]+$" },
+      "minItems": 1,
+      "description": "REQUIRED when phase == phase-1. Each id must exist in trajectory/profiles/baseline.json under analysis.candidate_failure_modes. Forces every proposal to be grounded in a baseline diagnostic finding rather than picked from an imagined menu."
+    },
+    "produces_artifact": {
+      "type": "string",
+      "description": "For phase-0 experiments: the artifact written, e.g. 'profiles/baseline.json', 'profiles/calibration.json'."
+    },
+    "novelty_audit": {
+      "type": "object",
+      "description": "P8 — REQUIRED before Stage-1 for every phase-1 mechanism. Must be mechanistic (what computation differs), never adjectives.",
+      "required": ["nearest_cv_analog", "structural_difference", "mechanism_of_difference"],
+      "properties": {
+        "nearest_cv_analog": {
+          "type": "string",
+          "description": "The closest existing CV block, named (e.g. 'SE block', 'BiFPN')."
+        },
+        "structural_difference": {
+          "type": "string",
+          "description": "What is structurally different from that analog."
+        },
+        "mechanism_of_difference": {
+          "type": "string",
+          "description": "Why that difference should change what is LEARNED — the causal story, stated so it can be checked blind later."
+        }
+      }
+    },
+    "stages_run": {
+      "type": "array",
+      "items": { "enum": ["S1", "S2"] },
+      "uniqueItems": true
+    },
+    "metrics_per_stage_per_seed": {
+      "type": "object",
+      "description": "Keyed by stage, then by seed (as string), then metric dict.",
+      "patternProperties": {
+        "^S[12]$": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "object",
+              "required": ["primary"],
+              "properties": {
+                "primary": { "type": "number" },
+                "secondary": { "type": "object", "additionalProperties": { "type": "number" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "stage1_curve": {
+      "type": "object",
+      "description": "P12 — REQUIRED for every Stage-1 Kill: the full per-epoch primary-metric trajectory (from the training-time val subset), keyed by seed as string.",
+      "patternProperties": {
+        "^[0-9]+$": {
+          "type": "array",
+          "items": { "type": "number" }
+        }
+      }
+    },
+    "p9": {
+      "type": "object",
+      "description": "Matched-control attribution numbers. REQUIRED for any classification above Hold. Deltas are seed-averaged primary metric, sign-normalized (positive = favorable).",
+      "required": ["control_run_ids", "mech_minus_baseline", "mech_minus_control", "control_minus_baseline"],
+      "properties": {
+        "control_run_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Run dirs / ids of the param_matched_generic control runs."
+        },
+        "mech_minus_baseline": { "type": "number" },
+        "mech_minus_control": {
+          "type": "number",
+          "description": "The form-specific effect — the number the paper claim rests on."
+        },
+        "control_minus_baseline": {
+          "type": "number",
+          "description": "The generic-capacity effect."
+        }
+      }
+    },
+    "p10": {
+      "type": "object",
+      "description": "Per-unit statistics. vs_baseline and vs_control REQUIRED for any classification above Hold. control_vs_baseline is the capacity-effect ledger: in the from-scratch regime a param-matched control legitimately helps (Axiom 2), so this test MEASURES the generic-capacity effect P9 subtracts — control-beats-baseline is expected, not a malfunction. Log it whenever control data exists; its running magnitude vs the noise floor is the audit.",
+      "required": ["vs_baseline", "vs_control"],
+      "properties": {
+        "vs_baseline": { "$ref": "#/$defs/p10_test" },
+        "vs_control": { "$ref": "#/$defs/p10_test" },
+        "control_vs_baseline": { "$ref": "#/$defs/p10_test" }
+      }
+    },
+    "p11": {
+      "type": "object",
+      "description": "Sealed-seed replication. REQUIRED for Winner or Fragile.",
+      "required": ["confirmation_seeds", "per_seed_deltas", "combined_vs_baseline", "combined_vs_control", "control_replicated", "verdict"],
+      "properties": {
+        "confirmation_seeds": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "minItems": 2
+        },
+        "per_seed_deltas": {
+          "type": "object",
+          "description": "Keyed by confirmation seed (as string): primary-metric delta vs baseline, sign-normalized.",
+          "patternProperties": { "^[0-9]+$": { "type": "number" } }
+        },
+        "combined_vs_baseline": { "$ref": "#/$defs/p10_test" },
+        "combined_vs_control": { "$ref": "#/$defs/p10_test" },
+        "control_replicated": {
+          "type": "boolean",
+          "description": "True if the control was re-run on the confirmation seeds (required when the P9 margin was under CONTROL_REPLICATION_NOISE_MULTIPLE x the S2 noise floor)."
+        },
+        "verdict": { "enum": ["Winner", "Fragile"] }
+      }
+    },
+    "classification": {
+      "enum": ["Op-Fail", "Kill", "Reject", "Hold", "Fragile", "Provisional Winner", "Winner"],
+      "description": "MUST match the vocabulary table in program.md verbatim."
+    },
+    "attribution": {
+      "type": "object",
+      "required": ["type", "subtype"],
+      "properties": {
+        "type": { "enum": ["scientific", "operational"] },
+        "subtype": {
+          "enum": [
+            "theory-misalignment",
+            "noise-floor",
+            "capacity-explains-gain",
+            "screened-out",
+            "direction-consistent-ns",
+            "replication-failed",
+            "winner-verified",
+            "gradient-dead",
+            "harness-fail",
+            "misconfiguration",
+            "crash",
+            "recipe-leak"
+          ],
+          "description": "First seven are scientific (Kill/Reject/Hold/Fragile/Winner); last five are operational (Op-Fail)."
+        },
+        "evidence": { "type": "string" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Pins exactly what ran. git makes code tamper-evident; the manifest sha does the same for the dataset.",
+      "required": ["git_commit", "data_manifest_sha256"],
+      "properties": {
+        "git_commit": {
+          "type": "string",
+          "description": "git rev-parse HEAD at run time."
+        },
+        "data_manifest_sha256": {
+          "type": "string",
+          "description": "sha256 of coco2k_manifest.json (written once by setup/create_coco2k.py)."
+        },
+        "train_args_hash": {
+          "type": "string",
+          "description": "Optional: hash of the resolved ultralytics train args (runs_v5/<name>/args.yaml)."
+        },
+        "ultralytics_commit": {
+          "type": "string",
+          "description": "git rev-parse of ultralytics_src (the framework is an EDITABLE install, outside this repo's own commit — record it or framework drift is invisible)."
+        }
+      }
+    },
+    "retry_of": {
+      "type": "string",
+      "pattern": "^exp[0-9]{3,}$",
+      "description": "P4 targeted retry only: the original experiment this corrects. At most one experiment may ever cite a given id here (hard cap: one retry per original)."
+    },
+    "retry_reason": {
+      "type": "string",
+      "description": "P4: the single diagnosable design flaw and the correction applied, with the predicted direction of change. Required when retry_of is set."
+    },
+    "regret": { "type": "number", "minimum": 0 },
+    "boldness": { "enum": ["bold", "incremental", "plumbing"] },
+    "cost_gpu_hours": { "type": "number", "minimum": 0 },
+    "prunes_emitted": {
+      "type": "array",
+      "items": { "type": "string", "description": "Insight ids written to insights.md as a result of this experiment." }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "notes": { "type": "string" }
+  }
+}

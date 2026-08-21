@@ -1,0 +1,12 @@
+{
+  "trajectory": "yolo26n_visdrone_scratch",
+  "regime": "from-scratch bold: structural mechanisms, matched-control attribution (P9), per-unit statistics (P10); screen = first S2 seed (v5 P12 lesson)",
+  "adapter": "yolo26n_visdrone_scratch",
+  "hypothesis": "YOLO26+COCO is a co-evolved local optimum; mechanisms nulled on COCO-2k may work on tiny-object aerial imagery where that equilibrium does not hold",
+  "eval_set": "FROZEN: val + test-dev = 2,158 images (user decision 2026-08-21)",
+  "confirmation_strategy": "a VisDrone Winner must replicate on 2 more datasets (candidates: SKU-110K, TT100K) before being claimed as a model improvement",
+  "phase": "Phase-0 (calibrate + diagnose) — exp000 not yet run",
+  "calibration": null,
+  "baseline": null,
+  "cwm": []
+}

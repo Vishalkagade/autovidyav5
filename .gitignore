@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.python-version
+
+# Training outputs (regenerable, large)
+runs/
+runs_visdrone/
+*.pt
+*.pth
+*.onnx
+*.log
+
+# Dataset locks — rendered by setup/create_visdrone_lists.py. The lists and
+# yamls contain machine-specific absolute paths → ignored.
+# visdrone_manifest.json (their sha256 fingerprint) IS tracked — that is the
+# provenance record every experiment JSON pins.
+visdrone_train.txt
+visdrone_eval.txt
+visdrone_val500.txt
+visdrone.yaml
+visdrone_s1.yaml
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*~
+
+# Local-only files
+.env
+secrets.*
