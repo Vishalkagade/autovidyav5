@@ -90,16 +90,22 @@ autovidya_visdrone/
 
 ## Status
 
-Scaffold instantiated 2026-08-21 from autovidya_v5. Open items before the
-trajectory can start:
+Scaffold instantiated 2026-08-21 from autovidya_v5; protocol amendments +
+`last.pt` eval-checkpoint lock adopted 2026-09-07 (see
+`trajectory/scratch/protocol_review_2026-08-21.md`).
 
 - [x] Dataset converted + verified (train 6,471 / val 548 / test-dev 1,610)
 - [x] Frozen eval set decided (val + test-dev, 2,158 — user, 2026-08-21)
-- [ ] `setup/create_visdrone_lists.py` run on this machine (lists + manifest)
-- [ ] `ultralytics_src` verified clean, commit recorded
-- [ ] exp000 driver written; exp000 run (budgets, noise floors, sealed-seed
-      baseline legs, diagnostics, instrument check) →
-      `trajectory/profiles/calibration.json` + `baseline.json`
-- [ ] First mechanism prereg (P2-evidence-fusion family, with the regime
-      argument) — written WITH the user
+- [x] `setup/create_visdrone_lists.py` run (lists + manifest sha'd)
+- [x] `ultralytics_src` verified clean @ `b10fa7be2`
+- [x] exp000 driver written + selftest passed
+      (`trajectory/scratch/exp000/{driver.py,run_exp000.sh}`)
+- [ ] **SUBMIT exp000:** `sbatch trajectory/scratch/exp000/run_exp000.sh`
+      (from the repo root; ~18-22 GPU-h, idempotent — resubmit same script
+      if walltime cuts it off)
+- [ ] After exp000: write `baseline.json` failure modes from
+      diagnostics.json (BEFORE opening the sealed v5 file), then exp000's
+      experiment JSON + index/scoreboard entries
+- [ ] First mechanism: proposal tournament → prereg (P2-evidence-fusion
+      family among the candidates, with the regime argument) — WITH the user
 ```
