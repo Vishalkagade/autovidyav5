@@ -72,16 +72,43 @@ DEC=$($PY -c "import json;print(json.load(open('$ST/screen_seed42.json'))['decis
 echo "[$(date +%H:%M:%S)] SCREEN_DECISION=$DEC"
 [ "$DEC" = "KILL" ] && { echo "[$(date +%H:%M:%S)] ${EXP^^}_KILLED_AT_SEED42"; exit 0; }
 
-# 2. Remaining working seeds.
-for s in 123 7; do
-  [ -f $ST/mech_S2_seed$s.json ] || $PY $DRV stage --variant mech --seed $s
-done
+# 2. Second seed, then the pre-registered futility stop: if the two-seed
+#    mean delta sits at/below the bar (prereg futility_two_seed_mean_delta,
+#    default -1x S2 noise floor), seed 7 cannot rescue a classification —
+#    stop as an early Reject and save the run.
+[ -f $ST/mech_S2_seed123.json ] || $PY $DRV stage --variant mech --seed 123
+FUT=$($PY - "$EXP" <<'PYEOF'
+import json, sys
+exp = sys.argv[1]
+floor = json.load(open("trajectory/profiles/calibration.json"))["noise_floor_s2_map50"]
+bar = json.load(open(f"trajectory/scratch/{exp}/prereg.json")).get(
+    "futility_two_seed_mean_delta", -floor)
+b = [json.load(open(f"trajectory/scratch/exp000/state/S2_seed{s}.json"))["primary"] for s in (42, 123)]
+m = [json.load(open(f"trajectory/scratch/{exp}/state/mech_S2_seed{s}.json"))["primary"] for s in (42, 123)]
+d = sum(m) / 2 - sum(b) / 2
+print(("STOP" if d <= bar else "GO"), round(d, 5), "bar", round(bar, 5))
+PYEOF
+)
+echo "[$(date +%H:%M:%S)] FUTILITY_CHECK=$FUT"
+if [ "${FUT%% *}" = "STOP" ]; then
+  for s in 42 123; do
+    [ -f $ST/per_unit_S2_mech_seed$s.json ] && continue
+    D=$($PY -c "import json;print(json.load(open('$ST/mech_S2_seed$s.json'))['save_dir'])")
+    $PY $DRV units --variant mech --seed $s --weights "$D/weights/last.pt"
+  done
+  echo "[$(date +%H:%M:%S)] ${EXP^^}_FUTILITY_REJECT"
+  echo "[$(date +%H:%M:%S)] ${EXP^^}_ALL_DONE gate=SHUT(futility)"
+  exit 0
+fi
+[ -f $ST/mech_S2_seed7.json ] || $PY $DRV stage --variant mech --seed 7
 
 # 3. Per-unit metric on every mechanism seed (frozen eval, 2,158 units).
+#    ALWAYS last.pt — the Tier-3 eval-checkpoint lock (best.pt selection
+#    sees part of the frozen eval; see adapter program.md).
 for s in $SEEDS; do
   [ -f $ST/per_unit_S2_mech_seed$s.json ] && continue
   D=$($PY -c "import json;print(json.load(open('$ST/mech_S2_seed$s.json'))['save_dir'])")
-  $PY $DRV units --variant mech --seed $s --weights "$D/weights/best.pt"
+  $PY $DRV units --variant mech --seed $s --weights "$D/weights/last.pt"
 done
 
 # 4. P9 control-deferral gate: spend the control only if the mechanism could
@@ -106,7 +133,7 @@ if [ "${GATE%% *}" = "OPEN" ]; then
   for s in $SEEDS; do
     [ -f $ST/per_unit_S2_control_seed$s.json ] && continue
     D=$($PY -c "import json;print(json.load(open('$ST/control_S2_seed$s.json'))['save_dir'])")
-    $PY $DRV units --variant control --seed $s --weights "$D/weights/best.pt"
+    $PY $DRV units --variant control --seed $s --weights "$D/weights/last.pt"
   done
 fi
 

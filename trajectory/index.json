@@ -6,7 +6,9 @@
   "eval_set": "FROZEN: val + test-dev = 2,158 images (user decision 2026-08-21)",
   "confirmation_strategy": "a VisDrone Winner must replicate on 2 more datasets (candidates: SKU-110K, TT100K) before being claimed as a model improvement",
   "phase": "Phase-0 (calibrate + diagnose) — exp000 not yet run",
+  "eval_checkpoint": "last.pt (Tier-3, pre-registered 2026-09-07 — best.pt selection sees 23% of the frozen eval via val500)",
   "calibration": null,
   "baseline": null,
+  "scoreboard": [],
   "cwm": []
 }

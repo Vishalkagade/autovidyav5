@@ -88,6 +88,7 @@ about what is weak.)
 | S1 epochs (probes only) | **CALIBRATE via exp000** (placeholder 30) |
 | S2 epochs | **CALIBRATE via exp000** (placeholder 100) |
 | AMP | False (cluster constraint) |
+| Eval checkpoint | **`last.pt`** (final epoch — pre-registered 2026-09-07, user decision). NEVER `best.pt`: best-checkpoint selection scores on `visdrone_val500.txt`, which overlaps the frozen eval (23%), quietly coupling model choice to the eval set. Epochs are Tier-3 fixed and training is deterministic, so `last.pt` is well-defined and selection-free. Applies to headline metrics, per-unit metrics, and diagnostics alike. |
 
 Budgets are placeholders until exp000 measures: (a) min/epoch from scratch
 at this train size, (b) the epoch at which vanilla eval-mAP50 slope
@@ -251,6 +252,6 @@ mechanism run (≈2x when the P9 deferral gate stays shut).
   batch in ultralytics 8.4.x (OOM at 2,158 images). The adapter already
   iterates image-by-image; keep it that way in drivers too.
 - **Quota:** home ~95/100G soft. `runs_visdrone/` weights are the main
-  growth; prune `last.pt` checkpoints of completed, recorded runs (keep
-  `best.pt` until the experiment JSON is committed). Watch for silent
-  output truncation when near quota.
+  growth; prune `best.pt` checkpoints freely (they are never evaluated —
+  see the `last.pt` Tier-3 lock) and keep `last.pt` until the experiment
+  JSON is committed. Watch for silent output truncation when near quota.

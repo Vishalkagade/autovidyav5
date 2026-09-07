@@ -182,13 +182,15 @@ class Yolo26nVisdroneScratchAdapter:
         - training runs with TRAIN_DATA_YAML: per-epoch val on the 500-image
           subset, which is cheap and yields the P12 learning curve;
         - the returned `primary`/`secondary` come from ONE full frozen-eval
-          pass with DATA_YAML after training. Headline numbers never come
-          from the subset.
+          pass with DATA_YAML after training, on LAST.PT (Tier-3 lock —
+          never best.pt, whose selection sees part of the eval set).
+          Headline numbers never come from the subset.
 
         NOTE: valid for the vanilla baseline and topology mechanisms only.
         site_wrap mechanisms MUST train via the driver-side SurgeryTrainer
         (Model.train rebuilds from yaml and drops in-place surgery).
         """
+        from ultralytics import YOLO
         epochs = stage_epochs(stage)
         t0 = time.time()
         model.train(
@@ -205,8 +207,14 @@ class Yolo26nVisdroneScratchAdapter:
             optimizer="MuSGD",
         )
         curve = self._read_epoch_curve(model)
-        final = model.val(data=DATA_YAML, imgsz=IMG_SIZE, batch=BATCH,
-                          plots=False, verbose=False, device=0)
+        # Tier-3 lock (pre-registered 2026-09-07): headline metrics come
+        # from LAST.PT — the final epoch's weights. best.pt is selected on
+        # val500, which overlaps the frozen eval set (23%); evaluating it
+        # would couple checkpoint choice to the eval. last.pt is
+        # selection-free (epochs Tier-3-fixed, training deterministic).
+        last = YOLO(str(model.trainer.last))
+        final = last.val(data=DATA_YAML, imgsz=IMG_SIZE, batch=BATCH,
+                         plots=False, verbose=False, device=0)
         return StageMetrics(
             primary=float(final.box.map50),
             secondary={

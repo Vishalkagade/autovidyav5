@@ -258,6 +258,12 @@ stop and ask before proceeding.
   scores and final outcomes for all candidates that were promoted, and
   check the kill curves for late-accelerating shapes. Base the STOP-flag on
   the curves; use the correlation only as the trigger to go look.
+  **FPR audit (amendment 2026-09-07):** the same audit reports the running
+  record of `p10.control_vs_baseline` outcomes across all experiments —
+  every P9 control is a placebo mechanism passing through the full gate
+  chain, so this is a free A/A check of the pipeline itself. Generic
+  residual blocks passing P10 vs baseline = the gates are miscalibrated →
+  STOP-flag.
 - **Tier locks.** Tier-3 (dataset splits + frozen eval, stage epochs, image
   size, batch size, model yaml, both seed sets) immutable within a
   trajectory. Tier-2 changes (lr, wd, optimizer, aux weights) require a
@@ -274,6 +280,45 @@ from the experiment's `prereg.json`, and only on promotion spend seeds 123
 and 7. `scripts/pipeline.sh` implements exactly this order. An S1 epoch
 budget is still calibrated by exp000 for cheap probes/debug runs — it is
 not a classification stage.
+
+**Pre-screen cheap gates (amendments 2026-09-07, user-authorized; from the
+harness review in `trajectory/scratch/protocol_review_2026-08-21.md`):**
+- **Tiny-overfit probe.** Before the seed-42 run, the driver trains
+  mechanism and baseline on a fixed ~8-image subset for a few hundred
+  iterations (CPU or first minutes of the allocation). A mechanism that
+  cannot overfit a tiny batch at roughly baseline speed is broken by
+  construction → Op-Fail for minutes instead of GPU-hours. Record the two
+  loss curves in the experiment scratch state.
+- **Driver dry-run.** Every driver gets a 1-batch CPU wiring run (surgery
+  assert, tripwires, state-file writes) plus an adversarial self-review
+  BEFORE sbatch — the queue wait is free review time; v5's exp001
+  vanished-surgery stage is what this catches.
+- **Futility stop (pre-registered).** After seed 123 completes, if the
+  two-seed mean `mech_minus_baseline` is at or below the futility bar
+  (`prereg.json` key `futility_two_seed_mean_delta`; default −1x the S2
+  noise floor), the experiment stops as an early Reject — seed 7 cannot
+  rescue a classification and buys nothing. The bar is fixed in prereg
+  BEFORE any Stage-2 number exists and is never applied retroactively.
+  `scripts/pipeline.sh` enforces it.
+
+### Proposal tournament + family diversity (pre-P8; amendments 2026-09-07)
+
+- **Tournament.** No prereg is written for a single un-compared idea.
+  Each experiment starts from 5-8 candidate mechanisms, compared pairwise
+  (debate format, written record in
+  `trajectory/scratch/exp<NNN>/tournament.md`) against FIXED criteria:
+  (1) fit to a measured `fm_*` failure mode, (2) strength of the P8
+  regime/novelty argument, (3) expected effect size vs the S2 noise floor,
+  stated mechanistically, (4) GPU + wall-clock cost (compute, not just
+  params — `ins_v5_zero_params_not_zero_cost`), (5) distance from
+  saturated or struck class-site pairs. Only the tournament winner gets a
+  prereg and GPU. Losers stay in the file — they are the bench for the
+  next round. Criteria are fixed here so they cannot drift per-experiment.
+- **Family diversity.** No two consecutive experiments from the same
+  `mechanism.family` unless the earlier one is a Hold whose P3/P4 duty
+  attaches. (v5 spent 3 of 8 experiments on one family; this rule would
+  have forced a rotation.) Heuristic, not a gate: the tournament record
+  may overrule it with explicit reasoning.
 
 ### When to STOP and ask the user
 
@@ -442,6 +487,13 @@ Every experiment writes:
      required for EVERY experiment, including exp000
      (`data_manifest_sha256` = sha256 of `visdrone_manifest.json`;
      `ultralytics_commit` = `git -C ../ultralytics_src rev-parse HEAD`).
+   The `cwm` entry in `trajectory/index.json` is accompanied by a
+   **scoreboard row** (amendment 2026-09-07): one structured object per
+   experiment in `index.json`'s `scoreboard` array — `{exp, family, site,
+   params_added, mAP50_delta, mAP50_95_delta, small_recall_delta,
+   f1_zero_mass_delta, classification}` — so proposal sessions see the
+   ranked, multi-metric history at a glance (diverse notions of "good"
+   breed diverse proposals; single-metric tunnel vision breeds repeats).
 2. An insight entry in `trajectory/insights.md` for every scientific outcome
    that changes what should be proposed next (all Fragiles and Rejects; Holds
    and Winners when they carry transferable information). Each entry is
