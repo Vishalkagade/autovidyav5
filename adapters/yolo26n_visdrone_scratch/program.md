@@ -87,7 +87,7 @@ about what is weak.)
 | Confirmation seeds | 1000, 2000 — **SEALED for P11.** Only exp000's baseline legs and a P11 replication may ever use them. |
 | S1 epochs (probes only) | **CALIBRATE via exp000** (placeholder 30) |
 | S2 epochs | **CALIBRATE via exp000** (placeholder 100) |
-| AMP | False (cluster constraint) |
+| AMP | True (user decision 2026-09-07 — local RTX 4090 is the compute; flipped before any run existed) |
 | Eval checkpoint | **`last.pt`** (final epoch — pre-registered 2026-09-07, user decision). NEVER `best.pt`: best-checkpoint selection scores on `visdrone_val500.txt`, which overlaps the frozen eval (23%), quietly coupling model choice to the eval set. Epochs are Tier-3 fixed and training is deterministic, so `last.pt` is well-defined and selection-free. Applies to headline metrics, per-unit metrics, and diagnostics alike. |
 
 Budgets are placeholders until exp000 measures: (a) min/epoch from scratch

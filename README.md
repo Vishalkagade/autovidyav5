@@ -7,7 +7,7 @@ Successor to [`../autovidya_v5`](../autovidya_v5) (COCO-2k, closed as a
 structured null). Trajectory hypothesis: YOLO26+COCO is a co-evolved local
 optimum — mechanisms that were nulls there may work on tiny-object aerial
 imagery, where that equilibrium does not hold. A VisDrone Winner must then
-replicate on 2 more datasets (candidates: SKU-110K, TT100K) before being
+replicate on 2 more datasets: one small-object set (SKU-110K; win required) and one normal-object set (Pascal VOC; no-regression bar, user decision 2026-09-07) before being
 claimed as a model improvement.
 
 This is a standalone repo. It contains the harness (`core/`, model-agnostic,

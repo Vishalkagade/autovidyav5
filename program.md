@@ -18,7 +18,7 @@ the regime where that equilibrium plausibly does not hold. A mechanism that
 failed on COCO and works here SUPPORTS the co-evolved-optimum hypothesis; a
 mechanism that fails in both regimes is evidence against the mechanism, not
 the hypothesis. Confirmation strategy (user-set): a VisDrone Winner must
-replicate on 2 more datasets (candidates: SKU-110K, TT100K) before it is
+replicate on 2 more datasets: one small-object set (SKU-110K; win required) and one normal-object set (Pascal VOC; no-regression bar, user decision 2026-09-07) before it is
 claimed as a model improvement.
 
 ## REGIME — bold / from-scratch (read before anything else)
@@ -133,9 +133,9 @@ stop and ask before proceeding.
   running job via `WAIT_LOG`. Never park a live allocation on a question.
 - **Fairshare is depleted (~0.09).** Expect 1-2 day queue waits. Plan
   self-starting job chains; between experiments decide and continue.
-- **AMP = False, always.** Cluster constraint. Adapter enforces this; do not override.
+- **AMP = True** (user decision 2026-09-07, before any run; local RTX 4090 is the compute). Adapter enforces this; do not override mid-trajectory.
 - **No internet on compute nodes.** No `pip install`, no `wget`, no `git pull`.
-- **One training run at a time.** Never launch parallel runs.
+- **At most two training runs at a time** on the local GPU (user decision 2026-09-07; a nano model does not saturate a 4090). Each run keeps its own seed and save_dir.
 - **Stage budgets are Tier-3 locked** (calibrated by exp000, stored in
   `trajectory/profiles/calibration.json`). Adapter enforces the epoch caps.
 - **Time-aware escalation:** when the SLURM allocation has <1 hour remaining,

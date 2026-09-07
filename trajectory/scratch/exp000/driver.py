@@ -41,7 +41,7 @@ import subprocess
 import sys
 import time
 
-PROJECT = "/home/hpc/v134ce/v134ce15/vishal/autovidya/autovidya_visdrone"
+PROJECT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 sys.path.insert(0, PROJECT)
 os.chdir(PROJECT)
 
@@ -83,7 +83,7 @@ def train_vanilla(epochs: int, seed: int, name: str) -> dict:
         data=A.TRAIN_DATA_YAML, epochs=epochs, imgsz=A.IMG_SIZE, batch=A.BATCH,
         seed=seed, device=0, workers=8, amp=A.AMP, val=True, plots=False,
         pretrained=False, project=os.path.join(PROJECT, "runs_visdrone"),
-        name=name, exist_ok=True, optimizer="MuSGD",
+        name=name, exist_ok=True, optimizer="MuSGD", cache="ram",
     )
     save_dir = str(model.trainer.save_dir)
     curve = _read_curve(save_dir)
@@ -181,7 +181,10 @@ def cmd_assemble(_args) -> None:
     probe = _load("probe.json")
     s1 = {s: _load(f"S1_seed{s}.json") for s in WORKING}
     s2w = {s: _load(f"S2_seed{s}.json") for s in WORKING}
-    s2c = {s: _load(f"S2_seed{s}.json") for s in SEALED}
+    # Sealed baseline legs are deferred until a Provisional Winner needs P11
+    # (user decision 2026-09-07); assemble tolerates their absence.
+    s2c = {s: _load(f"S2_seed{s}.json") for s in SEALED
+           if os.path.exists(os.path.join(STATE, f"S2_seed{s}.json"))}
     pu = {s: _load(f"per_unit_S2_seed{s}.json") for s in WORKING}
 
     floor_s1 = max(r["primary"] for r in s1.values()) - min(r["primary"] for r in s1.values())

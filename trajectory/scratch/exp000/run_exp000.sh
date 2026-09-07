@@ -22,7 +22,7 @@ set -e
 export CUDA_HOME=/apps/SPACK/0.19.1/opt/linux-almalinux8-zen/gcc-8.5.0/cuda-12.8.1-atsh4meheappo7elpgzr4smo64epwmh6
 export PATH=$CUDA_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
-cd "${SLURM_SUBMIT_DIR:-/home/hpc/v134ce/v134ce15/vishal/autovidya/autovidya_visdrone}"
+cd "${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 
 PY=../.venv/bin/python
 DRV=trajectory/scratch/exp000/driver.py

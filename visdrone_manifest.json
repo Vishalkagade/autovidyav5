@@ -1,23 +1,23 @@
 {
-  "dataset_root": "/home/atuin/v134ce/v134ce15/datasets/VisDrone",
+  "dataset_root": "/home/vishalkagade/datasets/VisDrone",
   "eval_set_decision": "frozen eval = val + test-dev (2,158 images), user 2026-08-21",
   "train_list": {
     "file": "visdrone_train.txt",
     "n_images": 6471,
-    "sha256": "cb796989f81cd5e5c27a5dde95339fef4c908f5b0fef21e0deb03516ba123309",
+    "sha256": "875f74d157a44d424edb87cd2e264d9026181e1587dde6590d99950073009011",
     "labels_sha256": "cf86dd1793278c9d67fb52fad61d8b113462980d865c1d514378af06b7d93a31"
   },
   "eval_list": {
     "file": "visdrone_eval.txt",
     "n_images": 2158,
-    "sha256": "24e509b3f9add4e25b85f1522c792082928977459cbcabb91a8f7fa08db7c1e6",
+    "sha256": "320fe41f17583c1aa22e8703ac95f1b983cea91e018aefe920ba889fa2a3e0c4",
     "labels_sha256": "6aed49ad9d80deca68e0122865c79219aba4318445bc572364b427af918b03b8"
   },
   "val500_list": {
     "file": "visdrone_val500.txt",
     "n_images": 500,
     "seed": 42,
-    "sha256": "a936613b1577cdca4adccf16d7094b5a0caa875a0fb601928f9b13e27400708c",
+    "sha256": "baed687473dfad151b6617553ee11c06018c9abfb6438e17947dbd516db0db39",
     "labels_sha256": "20544891606d2079aa575c61de854de40b796fb5b5fb709b5706dc80c31e6ea2"
   },
   "model_yaml": {

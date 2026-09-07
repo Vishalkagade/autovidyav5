@@ -12,7 +12,7 @@ Mechanisms may work where that equilibrium does not hold: tiny-object aerial ima
 - Path: `/home/atuin/v134ce/v134ce15/datasets/VisDrone` (images/ + labels/, YOLO format, 10 classes)
 - Splits: train 6,471 / val 548 / test 1,610 (dir name is `test`, VisDrone name is test-dev)
 - **Frozen eval set: val + test-dev = 2,158 images** (user decision 2026-08-21)
-- Confirmation strategy: a Winner must replicate on 2 more datasets (candidates: SKU-110K, TT100K)
+- Confirmation strategy: a Winner must replicate on 2 more datasets: one small-object set (SKU-110K; win required) and one normal-object set (Pascal VOC; no-regression bar, user decision 2026-09-07)
 
 ## Standing orders (carried over from autovidya_v5)
 

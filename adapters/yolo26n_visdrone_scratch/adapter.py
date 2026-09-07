@@ -42,7 +42,7 @@ _PROJECT = os.path.dirname(os.path.dirname(_HERE))
 MODEL_YAML = os.path.join(_HERE, "configs", "yolo26n-visdrone.yaml")
 IMG_SIZE = 640
 BATCH = 32
-AMP = False                          # cluster constraint — never override
+AMP = True                           # Tier-3 (user decision 2026-09-07, local RTX 4090; flipped before any run existed)
 
 # Headline metrics ALWAYS come from a full frozen-eval pass with this yaml
 # (val: visdrone_eval.txt = val + test-dev, 2,158 images):
@@ -204,7 +204,7 @@ class Yolo26nVisdroneScratchAdapter:
             # and long runs would silently get different optimizers. Pinning
             # MuSGD keeps every run on the same optimizer regardless of
             # epoch count.
-            optimizer="MuSGD",
+            optimizer="MuSGD", cache="ram",
         )
         curve = self._read_epoch_curve(model)
         # Tier-3 lock (pre-registered 2026-09-07): headline metrics come

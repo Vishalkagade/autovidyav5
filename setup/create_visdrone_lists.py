@@ -30,7 +30,7 @@ import re
 import sys
 
 PROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATASET_ROOT = "/home/atuin/v134ce/v134ce15/datasets/VisDrone"
+DATASET_ROOT = os.environ.get("VISDRONE_ROOT", "/home/atuin/v134ce/v134ce15/datasets/VisDrone")
 YOLO26_YAML = os.path.normpath(os.path.join(
     PROJECT, "..", "ultralytics_src", "ultralytics", "cfg", "models", "26", "yolo26.yaml"))
 MODEL_YAML_OUT = os.path.join(
