@@ -1,0 +1,7 @@
+{
+  "seed": 42,
+  "weights": "/home/vishalkagade/vishal/autovidyav5/runs_visdrone/exp000_S2_seed42/weights/last.pt",
+  "n_pred": 61129,
+  "dup_frac": 0.08428078326162705,
+  "fp_frac": 0.16381750069525103
+}
