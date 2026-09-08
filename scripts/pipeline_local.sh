@@ -3,6 +3,7 @@
 # gates) — plain bash, no SLURM; control legs run two at a time.
 #   nohup bash scripts/pipeline_local.sh exp001 > trajectory/scratch/exp001/local.log 2>&1 &
 set -e
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd "$(cd "$(dirname "$0")/.." && pwd)"
 EXP=${1:?usage: pipeline_local.sh expNNN}
 PY=../.venv/bin/python; DRV=trajectory/scratch/$EXP/driver.py; ST=trajectory/scratch/$EXP/state; SEEDS="42 123 7"
