@@ -5,7 +5,7 @@
   "hypothesis": "YOLO26+COCO is a co-evolved local optimum; mechanisms nulled on COCO-2k may work on tiny-object aerial imagery where that equilibrium does not hold",
   "eval_set": "FROZEN: val + test-dev = 2,158 images (user decision 2026-08-21)",
   "confirmation_strategy": "a VisDrone Winner must replicate on 2 more datasets before being claimed as a model improvement: one small-object set (SKU-110K; win required) and one normal-object set (Pascal VOC; no-regression bar). User decision 2026-09-07: three small-object wins would only prove a small-object helper.",
-  "phase": "Phase-0 complete (exp000 done 2026-09-07, instrument PASS) \u2014 Phase-1 unlocks when baseline.json is committed",
+  "phase": "Phase-1 \u2014 exp001 Provisional Winner",
   "eval_checkpoint": "last.pt (Tier-3, pre-registered 2026-09-07 \u2014 best.pt selection sees 23% of the frozen eval via val500)",
   "calibration": {
     "s1_epochs": 30,
@@ -43,6 +43,19 @@
       "f1_zero_mass": 0.013129440840284215,
       "f1_zero_mass_delta": 0.0,
       "classification": "Reject (baseline; delta=0 by definition)"
+    },
+    {
+      "exp": "exp001",
+      "family": "evidence-fusion",
+      "site": null,
+      "params_added": 10652,
+      "mAP50": 0.2855640526179714,
+      "mAP50_delta": 0.015140819718471865,
+      "mAP50_95_delta": 0.013578719851574078,
+      "small_recall": 0.23626484808562487,
+      "small_recall_delta": 0.009661211784611804,
+      "f1_zero_mass_delta": -0.002008032128514057,
+      "classification": "Provisional Winner"
     }
   ],
   "cwm": [

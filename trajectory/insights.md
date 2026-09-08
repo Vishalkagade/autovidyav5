@@ -67,3 +67,27 @@ file during Phase-0.**
   per-unit F1 degeneracy 1.5-1.7% (COCO-2k was 41-44%) and relative S2
   noise floor 0.018 — ~8x more headroom than the pre-registered 0.15 bar.
   evidence: exp000. status: active.
+- `ins_003` — claim: P2 evidence fusion (stride-4 feature routed into the
+  head), the mechanism COCO-2k falsified at -0.022 (`ins_v5_p3_fusion_
+  locally_optimal`), gains +0.0151 mAP50 (3.0x floor; seeds +0.019/+0.011/
+  +0.015) on VisDrone from scratch, while a param-matched stride-8 control
+  sits at baseline (-0.0015; per-unit p=0.68). The gain is the finer evidence
+  path, not capacity. Same-sign per-unit effect on every seed (P10 vs
+  baseline CI [+0.0077,+0.0122], vs control [+0.0076,+0.0121]).
+  evidence: exp001. status: active — PROVISIONAL until P11 resolves; if P11
+  passes this is the first direct support for the co-evolved-optimum reading
+  of COCO (a COCO-null mechanism that works where object scale breaks the
+  equilibrium).
+- `ins_004` — claim: recall-at-conf-0.25 by scale is a threshold-bound
+  discriminator that misses AP-visible gains: exp001 raised small-class AP50
+  by ~+0.03 (pedestrian, people, motor) but small_recall@.25 by only
+  +0.008-0.013, failing a +0.05 bar. Pre-register threshold-free
+  discriminators (per-scale or per-class AP deltas), never recall at a fixed
+  confidence. evidence: exp001. status: active.
+- `ins_005` — claim: "params added" mis-prices topology mechanisms by an
+  order of magnitude here: the P2 route adds 0.4% params, 1.5x forward
+  FLOPs, and 3.0x wall-clock (4x anchors -> assigner memory -> CPU fallback
+  on dense batches). Budget by measured wall-clock on a real batch, and
+  report the mechanism-vs-control compute asymmetry in every P9 record
+  (extends `ins_v5_zero_params_not_zero_cost`). evidence: exp001. status:
+  active.

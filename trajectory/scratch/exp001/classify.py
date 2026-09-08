@@ -17,7 +17,7 @@ def by_seed(fmt, seeds): return {s: [tuple(u) for u in L(fmt.format(s))["units"]
 
 def t2d(r):  # P10Result -> schema p10_test
     return {"n_units": r.n_units, "mean_diff": r.mean_diff, "median_diff": r.median_diff, "ci95": list(r.ci95), "wilcoxon_p": r.wilcoxon_p,
-            "units_improved": r.units_improved, "per_seed_means": {str(k): v for k, v in r.per_seed_means.items()}, "verdict": "pass" if r.passed else "fail", "reason": r.reason}
+            "units_improved": r.units_improved, "per_seed_means": {str(k): v for k, v in r.per_seed_means.items()}, "verdict": "pass" if r.passed else ("direction-consistent-ns" if r.mean_diff > 0 else "unfavorable"), "reason": r.reason}
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--notes", default=""); ap.add_argument("--write", action="store_true"); a = ap.parse_args()
@@ -30,7 +30,7 @@ def main():
     out = {"id": "exp001", "phase": "phase-1", "adapter_name": "yolo26n_visdrone_scratch",
            "mechanism": {"name": prereg["mechanism"]["name"], "source_domain": "none (re-test of a COCO-falsified CV mechanism under the P8 regime argument)", "kind": "topology",
                          "family": prereg["mechanism"]["family"], "site": None, "params_count": prereg["mechanism"]["params_added_measured"]},
-           "cites_baseline_finding_ids": prereg["cites_baseline_finding_ids"], "novelty_audit": prereg["novelty_audit"],
+           "cites_baseline_finding_ids": prereg["cites_baseline_finding_ids"], "novelty_audit": {**prereg["novelty_audit"], "nearest_cv_analog": prereg["novelty_audit"]["nearest_cv_block"], "mechanism_of_difference": prereg["novelty_audit"]["structural_difference"] + " REGIME ARGUMENT: " + prereg["novelty_audit"]["regime_argument"]},
            "stages_run": ["S2"], "metrics_per_stage_per_seed": {"S2": {str(s): {"primary": m["primary"], "secondary": m["secondary"]} for s, m in mech.items()}},
            "stage1_curve": {str(s): m["curve_val500_map50"] for s, m in mech.items()},
            "provenance": {"git_commit": subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip(),

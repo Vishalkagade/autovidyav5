@@ -23,7 +23,8 @@ YAML = {"mech": os.path.join(CFG, "yolo26n-p2-visdrone.yaml"),
         "baseline": os.path.join(CFG, "yolo26n-visdrone.yaml")}
 STRIDES = {"mech": [4, 8, 16, 32], "control": [8, 16, 32], "baseline": [8, 16, 32]}
 PREREG = json.load(open(os.path.join(PROJECT, "trajectory", "scratch", "exp001", "prereg.json")))
-BASE_S2 = {s: json.load(open(f"{PROJECT}/trajectory/scratch/exp000/state/S2_seed{s}.json")) for s in (42, 123, 7)}
+BASE_S2 = {s: json.load(open(f"{PROJECT}/trajectory/scratch/exp000/state/S2_seed{s}.json")) for s in (42, 123, 7, 1000, 2000)
+           if os.path.exists(f"{PROJECT}/trajectory/scratch/exp000/state/S2_seed{s}.json")}
 
 def _w(name, obj):
     p = os.path.join(STATE, name); json.dump(obj, open(p, "w"), indent=2); print(f"[driver] wrote {p}")
@@ -72,7 +73,7 @@ def train(variant, epochs, seed, name, data=None, val_full=True, batch=None, ext
 def cmd_stage(a):
     cal = json.load(open(f"{PROJECT}/trajectory/profiles/calibration.json"))
     r = train(a.variant, cal["s2_epochs"], a.seed, f"exp001_{a.variant}_S2_seed{a.seed}")
-    r["stage"] = "S2"; r["delta_vs_baseline_seed"] = r["primary"] - BASE_S2[a.seed]["primary"]
+    r["stage"] = "S2"; r["delta_vs_baseline_seed"] = (r["primary"] - BASE_S2[a.seed]["primary"]) if a.seed in BASE_S2 else None
     _w(f"{a.variant}_S2_seed{a.seed}.json", r)
 
 def cmd_units(a):

@@ -1,0 +1,9 @@
+{
+  "seed": 42,
+  "mech": 0.28840126825375073,
+  "baseline": 0.2696976494198432,
+  "delta": 0.01870361883390753,
+  "kill_bar": -0.005,
+  "decision": "PROMOTE",
+  "small_recall_delta_vs_seed123_baseline": 0.009023385815584511
+}
