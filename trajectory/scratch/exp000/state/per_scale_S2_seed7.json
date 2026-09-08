@@ -1,0 +1,9 @@
+{
+  "seed": 7,
+  "weights": "/home/vishalkagade/vishal/autovidyav5/runs_visdrone/exp000_S2_seed7/weights/last.pt",
+  "per_scale_recall": {
+    "small_recall": 0.22194954987536003,
+    "medium_recall": 0.5967355359364097,
+    "large_recall": 0.7356916882369859
+  }
+}
