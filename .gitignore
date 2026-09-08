@@ -34,3 +34,6 @@ visdrone_s1.yaml
 # Local-only files
 .env
 secrets.*
+
+# per-step chain logs (state JSONs are tracked, logs are not)
+trajectory/scratch/*/state/log_*.txt

@@ -1,0 +1,40 @@
+{
+  "exp": "exp001",
+  "written": "2026-09-08 — BEFORE any Stage-2 number for this mechanism exists",
+  "mechanism": {
+    "name": "P2 evidence fusion (stride-4 feature routed into the head, Detect over P2-P5)",
+    "kind": "topology",
+    "yaml": "adapters/yolo26n_visdrone_scratch/configs/yolo26n-p2-visdrone.yaml",
+    "family": "evidence-fusion",
+    "site": null,
+    "params_added_measured": 10652,
+    "forward_cost_ratio_measured": 1.5
+  },
+  "cites_baseline_finding_ids": ["fm_small_gt_missed", "fm_dense_scene_f1_collapse"],
+  "novelty_audit": {
+    "nearest_cv_block": "YOLO-P2 head variant (ultralytics yolov8/26-p2.yaml); FPN with an extra pyramid level",
+    "structural_difference": "None at the block level — this is deliberately the SAME mechanism v5 exp007 falsified on COCO-2k (-0.0222). Admitted under program.md P8 as a re-test: the v5 record plus the regime argument below IS the experiment.",
+    "regime_argument": "VisDrone frozen-eval median GT side = 22 px native = ~8 px at the 640 input, i.e. under one stride-8 cell; 68% of GT is COCO-small and the baseline recovers 23% of it (fm_small_gt_missed). On COCO-2k the median object spans many stride-8 cells, so stride-4 evidence was redundant there. Prediction: the same computation that was harmful noise on COCO is the missing evidence path here.",
+    "v5_record": "ins_v5_p3_fusion_locally_optimal (exp004+exp007)"
+  },
+  "positive_control_role": "P2 heads are reported to help on VisDrone. This run therefore ALSO tests harness sensitivity. If exp001 ends below Hold, write harness_sensitivity_unproven to index.json and STOP for the user before exp002 (program.md STOP condition 6 analogue).",
+  "discriminator": {
+    "statement": "small_recall (per_scale_metric, IoU .5 conf .25) must rise by >= 0.05 absolute over the baseline seed-matched value on EVERY working seed. A mAP50 gain without this is not the stated mechanism.",
+    "baseline_small_recall_seed123": 0.2288,
+    "on_fail": "classify from P10 as usual, but set attribution.evidence 'discriminator_failed' and do not credit the evidence-fusion account"
+  },
+  "kill_bar_seed42_delta": -0.0050,
+  "futility_two_seed_mean_delta": -0.0050,
+  "p9_gate_delta": 0.0050,
+  "noise_floor_s2_map50": 0.004967,
+  "baseline_s2_map50_by_seed": {"42": 0.26970, "123": 0.27327, "7": 0.26830},
+  "control": {
+    "kind": "topology (param-matched generic, designed for this experiment)",
+    "yaml": "adapters/yolo26n_visdrone_scratch/configs/yolo26n-p3ctl-visdrone.yaml",
+    "design": "two 1x1 Convs (64->80->64) inserted after head layer 16 (P3 out), +10,528 params (0.99x mechanism), stride 8 only, no stride-4 route",
+    "compute_note": "control is CHEAPER than the mechanism (~1.0x vs 1.5x forward); compute is part of what P2 buys and is reported, not hidden"
+  },
+  "pre_screen_gates": ["gradcheck (P6') on the P2 head layers", "dryrun (build + 1 forward on CPU, Detect strides tripwire)", "tinyprobe (8-image overfit: mechanism final loss <= 1.5x baseline final loss)"],
+  "budget_estimate_gpu_h": 11,
+  "stages": ["S2 only (80 epochs) — screen = seed 42 at full S2 budget"]
+}

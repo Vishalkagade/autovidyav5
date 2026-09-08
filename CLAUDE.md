@@ -16,7 +16,7 @@ Mechanisms may work where that equilibrium does not hold: tiny-object aerial ima
 
 ## Standing orders (carried over from autovidya_v5)
 
-- **Trajectory written WITH the user.** program.md is judgment layer only. Do not scaffold experiments unilaterally.
+- **Autonomous operation (user order 2026-09-08).** Consider all information, decide, and keep experimenting — tournament -> prereg -> driver -> launch -> classify -> commit -> next. Do not stop to ask. Stop only for the program.md STOP conditions or a destructive action.
 - **Headless sbatch only.** Never pty-attach for GPU work (SSH drop kills training). Self-starting job chains: first-S2-seed screen -> remaining seeds -> per-unit -> P9 control-deferral gate -> control.
 - **Fairshare is depleted (~0.09).** Expect 1-2 day queue waits. Plan self-starting jobs; never park a live allocation on a question. Between experiments: decide and continue.
 - **Surgery trainer pattern is MANDATORY** for site_wrap training. `Model.train` rebuilds from yaml and drops in-place surgery.
