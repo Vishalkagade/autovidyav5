@@ -54,3 +54,16 @@ file during Phase-0.**
   source as ONE batch; per-unit metrics must predict image-by-image.
 
 ## Findings (populate as trajectory runs)
+
+- `ins_001` — claim: ultralytics 8.4.23 `compute_ap` interpolates linearly to
+  (recall 1, precision 0) beyond the last reached recall, so mAP50 on this
+  eval RISES monotonically with the val conf threshold (0.273 @0.001, 0.300
+  @0.05, 0.322 @0.1, 0.375 @0.25) — a phantom-area term, not better
+  detection. evidence: exp000. status: active. Consequence: never compare
+  runs at different conf thresholds; a mechanism that changes tail precision
+  moves this term, so P10's per-unit F1 (conf .25, threshold-fixed) is the
+  arbiter, never a headline mAP delta alone.
+- `ins_002` — claim: at 640 px from scratch, VisDrone's instrument is viable:
+  per-unit F1 degeneracy 1.5-1.7% (COCO-2k was 41-44%) and relative S2
+  noise floor 0.018 — ~8x more headroom than the pre-registered 0.15 bar.
+  evidence: exp000. status: active.

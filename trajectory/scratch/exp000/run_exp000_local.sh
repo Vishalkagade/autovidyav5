@@ -10,7 +10,7 @@ PY=../.venv/bin/python
 DRV=trajectory/scratch/exp000/driver.py
 ST=trajectory/scratch/exp000/state
 mkdir -p "$ST"
-run() { echo "[$(date +%H:%M:%S)] START $*"; $PY $DRV "$@" > "$ST/log_$(echo "$*" | tr ' -' '__').txt" 2>&1; echo "[$(date +%H:%M:%S)] DONE  $*"; }
+run() { echo "[$(date +%H:%M:%S)] START $*"; $PY $DRV "$@" > "$ST/log_$(echo "$*" | tr -c 'A-Za-z0-9\n' '_').txt" 2>&1; echo "[$(date +%H:%M:%S)] DONE  $*"; }
 stage() { [ -f $ST/${1}_seed$2.json ] || run stage --stage $1 --seed $2; }
 units() { [ -f $ST/per_unit_S2_seed$1.json ] && return; D=$($PY -c "import json;print(json.load(open('$ST/S2_seed$1.json'))['save_dir'])"); run units --seed $1 --weights "$D/weights/last.pt"; }
 
