@@ -1,0 +1,32 @@
+{
+  "baseline": {
+    "params": 2507700,
+    "strides": [
+      8,
+      16,
+      32
+    ],
+    "focus": false
+  },
+  "mech": {
+    "params": 2518004,
+    "strides": [
+      8,
+      16,
+      32
+    ],
+    "focus": true
+  },
+  "control": {
+    "params": 2518884,
+    "strides": [
+      8,
+      16,
+      32
+    ],
+    "focus": false
+  },
+  "added_mech": 10304,
+  "added_control": 11184,
+  "pass": true
+}

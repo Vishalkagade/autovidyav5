@@ -1,0 +1,26 @@
+{
+  "exp": "exp006",
+  "written": "2026-09-09 — BEFORE any Stage-2 number for this mechanism exists",
+  "mechanism": {"name": "Polyphase evidence route: stride-4 P2 feature carried as 4 polyphase components into the P3 head fusion", "kind": "topology",
+                "yaml": "adapters/yolo26n_visdrone_scratch/configs/yolo26n-polyphase-visdrone.yaml", "family": "evidence-fusion", "site": null,
+                "params_added_measured": 10304, "forward_cost_ratio_measured": 1.1,
+                "source_domain": "multirate_signal_processing (polyphase decomposition, Vaidyanathan 1993; Crochiere & Rabiner 1983)"},
+  "cites_baseline_finding_ids": ["fm_small_gt_missed", "fm_dense_scene_f1_collapse"],
+  "novelty_audit": {
+    "nearest_cv_analog": "SPD-Conv (space-to-depth conv, Sunkara & Luo 2022) and the YOLOv5 Focus stem — space-to-depth replacing a strided conv at the input",
+    "mechanism_of_difference": "Space-to-depth is applied as a LATERAL route from the backbone's stride-4 P2 feature (already computed, currently unused by the head) into the P3 fusion concat, in parallel with the existing FPN path; the decimating backbone is untouched, the decision grid stays at stride 8, and the P3 block receives 32 channels that carry the four polyphase components of the P2 signal. SPD/Focus replace stride at the stem; this preserves P2 detail for the P3 decision. It is the exact complement of exp005 (slots without evidence) and the cheap half of exp001 (evidence + slots).",
+    "regime_argument": "The median VisDrone object is ~8 px at the 640 input — under one stride-8 cell — so the polyphase components of P2 carry sub-cell structure the P3 feature has decimated away; on COCO the P3 feature already resolves the median object, so the route is redundant there (v5 exp007 P2 fusion: -0.022)."
+  },
+  "discriminators": {
+    "D1": {"statement": "mean AP50 over small-dominated classes {pedestrian, people, bicycle, motor} must RISE vs the seed-matched baseline on every working seed"},
+    "D2_evidence_account": {"statement": "PRE-REGISTERED READING: seed-averaged small-class AP50 delta >= 0.5x exp001's supports the 'stride-4 evidence' account of exp001; < 0.25x refutes it; between: undetermined."},
+    "on_fail": "classify from P10 as usual; record discriminator_failed; do not credit the polyphase-evidence account"
+  },
+  "kill_bar_seed42_delta": -0.0050, "futility_two_seed_mean_delta": -0.0050, "p9_gate_delta": 0.0050,
+  "noise_floor_s2_map50": 0.004967, "baseline_s2_map50_by_seed": {"42": 0.26970, "123": 0.27327, "7": 0.26830},
+  "control": {"kind": "topology (param-matched generic, designed for this experiment)", "yaml": "adapters/yolo26n_visdrone_scratch/configs/yolo26n-polyctl-visdrone.yaml",
+              "design": "two 1x1 convs (64->56->32) on the STRIDE-8 backbone P3 feature feeding the same 32 channels into the same concat; +11,184 params (1.085x); no stride-4 evidence"},
+  "pre_screen_gates": ["dryrun (build both; Focus present only in mech; strides [8,16,32] both; params; ratio 0.9-1.1)", "gradcheck (P6' on the Focus route)", "tinyprobe (ratio <= 1.5)"],
+  "expected_verdict_prior": "Provisional Winner or Hold; the pre-registered prediction is >= 0.5x of exp001's small-class gain",
+  "budget_estimate_gpu_h": 9
+}
