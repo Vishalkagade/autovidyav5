@@ -1,0 +1,152 @@
+{
+  "id": "exp007",
+  "phase": "phase-1",
+  "adapter_name": "yolo26n_visdrone_scratch",
+  "mechanism": {
+    "name": "Sibling-pair margin objective (ECOC one-bit margin on measured confusion pairs)",
+    "source_domain": "coding_theory (error-correcting output codes, Dietterich & Bakiri 1995)",
+    "kind": "aux_objective",
+    "family": "code-margin",
+    "site": null,
+    "params_count": 0
+  },
+  "cites_baseline_finding_ids": [
+    "fm_sibling_class_confusion"
+  ],
+  "novelty_audit": {
+    "nearest_cv_analog": "hierarchical softmax (YOLO9000) and pairwise margin / contrastive class losses",
+    "mechanism_of_difference": "No tree and no extra outputs: a softplus margin on the difference between the assigned class logit and its measured sibling's logit, for positives of paired classes only, added to the cls loss from step 0. The pairs are fixed from Phase-0 confusion data (the code's distance-1 pairs), not learned and not a taxonomy prior. REGIME ARGUMENT: On COCO-2k an ECOC objective closed a train/val cls gap with a null mAP effect (v5 exp006) \u2014 the gap was a symptom. On VisDrone the sibling confusion is measured ON the frozen eval as the outcome (van->car 58% of located vans) and mAP50 is class-aware, so any reduction is metric-visible. Counter-risk, stated: exp001 showed resolution is the lever; the margin may be unattainable at 30 px.",
+    "regime_argument": "On COCO-2k an ECOC objective closed a train/val cls gap with a null mAP effect (v5 exp006) \u2014 the gap was a symptom. On VisDrone the sibling confusion is measured ON the frozen eval as the outcome (van->car 58% of located vans) and mAP50 is class-aware, so any reduction is metric-visible. Counter-risk, stated: exp001 showed resolution is the lever; the margin may be unattainable at 30 px.",
+    "nearest_cv_block": "hierarchical softmax (YOLO9000) and pairwise margin / contrastive class losses",
+    "structural_difference": "No tree and no extra outputs: a softplus margin on the difference between the assigned class logit and its measured sibling's logit, for positives of paired classes only, added to the cls loss from step 0. The pairs are fixed from Phase-0 confusion data (the code's distance-1 pairs), not learned and not a taxonomy prior."
+  },
+  "stages_run": [
+    "S2"
+  ],
+  "metrics_per_stage_per_seed": {
+    "S2": {
+      "42": {
+        "primary": 0.26252484786418767,
+        "secondary": {
+          "mAP50_95": 0.1420919858616962,
+          "precision": 0.38005736862948253,
+          "recall": 0.2814515436214737
+        }
+      }
+    }
+  },
+  "stage1_curve": {
+    "42": [
+      0.00157,
+      0.04026,
+      0.06203,
+      0.10252,
+      0.12272,
+      0.14005,
+      0.14279,
+      0.15637,
+      0.17887,
+      0.17845,
+      0.18676,
+      0.19209,
+      0.19821,
+      0.20271,
+      0.20935,
+      0.20933,
+      0.21359,
+      0.21744,
+      0.22496,
+      0.22587,
+      0.22796,
+      0.23078,
+      0.2322,
+      0.23622,
+      0.23798,
+      0.24388,
+      0.25087,
+      0.23853,
+      0.2484,
+      0.24838,
+      0.24098,
+      0.24971,
+      0.2443,
+      0.25118,
+      0.25414,
+      0.25318,
+      0.25627,
+      0.25685,
+      0.25675,
+      0.25657,
+      0.26568,
+      0.25819,
+      0.26826,
+      0.26012,
+      0.26269,
+      0.26552,
+      0.26854,
+      0.27097,
+      0.27115,
+      0.2679,
+      0.2696,
+      0.26829,
+      0.27276,
+      0.27282,
+      0.27324,
+      0.27453,
+      0.27606,
+      0.2751,
+      0.27209,
+      0.27194,
+      0.27383,
+      0.27392,
+      0.27469,
+      0.27687,
+      0.27468,
+      0.27462,
+      0.27246,
+      0.27399,
+      0.27474,
+      0.27534,
+      0.27078,
+      0.27034,
+      0.27307,
+      0.27477,
+      0.27415,
+      0.27465,
+      0.27372,
+      0.27374,
+      0.27358,
+      0.273
+    ]
+  },
+  "provenance": {
+    "git_commit": "a8a66200d75b919fa690bf8dacc2705d42ce52de",
+    "data_manifest_sha256": "89cbdc099b44847e8d69b5d3f507c39483be8ab742a81a3716c98dd4ae9794a2",
+    "ultralytics_commit": "b10fa7be231820cea668c52af45b25d07ff65968"
+  },
+  "created_at": "2026-09-09T22:22:33+00:00",
+  "boldness": "bold",
+  "attribution": {
+    "type": "scientific",
+    "subtype": "screened-out",
+    "evidence": "seed deltas mAP50 {'42': -0.007172801555655528}; seed-avg mech-baseline -0.0072 (-1.4x floor); discriminators D1 sibling-confusion deltas {42: +0.0003} D2 worst-5 AP50 deltas {42: -0.0087} -> FAIL (discriminator_failed); no gate line; Screen KILL at seed 42: -0.0072 mAP50 (1.4x floor, negative). Tripwire: margin term applied on 32,480 criterion calls / 193M paired positives, mean term 0.85 at the end of training \u2014 the margin was NOT reached (softplus(2 - dz) = 0.85 means dz ~ 1.3 on average). Pooled sibling-confusion rate unchanged (0.1104 vs 0.1100; van 0.574 vs 0.606, bicycle 0.554 vs 0.583, people 0.222 vs 0.283, awning 0.226 vs 0.209). AP50 fell on 8 of 10 classes (awning-tricycle -0.025, car -0.012, truck -0.011). Discriminators: D1 (confusion falls) FAILED, D2 (worst-5 AP rises) FAILED. Reading: sibling confusion is not a decision-boundary problem the classifier can be pushed across; the discriminating evidence is absent at 640 px (consistent with exp001: resolution is the lever). P2 ledger: code-margin @ objective = 1 failure."
+  },
+  "classification": "Kill",
+  "discriminator": {
+    "statement": "sibling-pair confusion rate (located objects of a paired class assigned the sibling class / located objects of that class, adapter matcher, conf .25, summed over the five pairs) must FALL vs the seed-matched baseline on every working seed AND mean AP50 over the five worst-confused classes {van, bicycle, awning-tricycle, people, truck} must RISE vs the seed-matched baseline on every working seed",
+    "by_seed": {
+      "42": {
+        "D1_sibconf_rate_mech": 0.11035030479951918,
+        "D1_sibconf_rate_base": 0.1100450362247895,
+        "D1_delta": 0.00030526857472967794,
+        "D2_worst5_ap50_delta": -0.008680380363461776,
+        "D1_pass": false,
+        "D2_pass": false,
+        "delta": -0.008680380363461776
+      }
+    },
+    "pass": false
+  },
+  "cost_gpu_hours": 0.7374939861562517,
+  "notes": "Screen KILL at seed 42: -0.0072 mAP50 (1.4x floor, negative). Tripwire: margin term applied on 32,480 criterion calls / 193M paired positives, mean term 0.85 at the end of training \u2014 the margin was NOT reached (softplus(2 - dz) = 0.85 means dz ~ 1.3 on average). Pooled sibling-confusion rate unchanged (0.1104 vs 0.1100; van 0.574 vs 0.606, bicycle 0.554 vs 0.583, people 0.222 vs 0.283, awning 0.226 vs 0.209). AP50 fell on 8 of 10 classes (awning-tricycle -0.025, car -0.012, truck -0.011). Discriminators: D1 (confusion falls) FAILED, D2 (worst-5 AP rises) FAILED. Reading: sibling confusion is not a decision-boundary problem the classifier can be pushed across; the discriminating evidence is absent at 640 px (consistent with exp001: resolution is the lever). P2 ledger: code-margin @ objective = 1 failure."
+}

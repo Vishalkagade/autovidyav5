@@ -146,3 +146,14 @@ file during Phase-0.**
   pay when a decision is made at their resolution. Cheap halves of the P2
   head do not exist at this scale; the 3x wall-clock is the price.
   evidence: exp006, exp005, exp001. status: active.
+- `ins_012` — claim: sibling-class confusion on VisDrone (van->car 0.6,
+  bicycle->motor 0.56 of located objects) is not a decision-boundary
+  problem: a verified ECOC-style logit margin on the five measured sibling
+  pairs (lambda 0.5, margin 2.0) left the confusion rate unchanged (0.1104
+  vs 0.1100), never reached its margin (mean term 0.85 after 80 epochs), and
+  cost -0.0072 mAP50 with AP down on 8/10 classes (Kill). The classifier
+  cannot be pushed to separate what the features do not resolve; sibling
+  confusion belongs to fm_small_gt_missed's resolution story, not to the
+  objective. Objective-side proposals citing fm_sibling_class_confusion are
+  not worth GPU without new evidence. evidence: exp007 (+ exp001). status:
+  active.
