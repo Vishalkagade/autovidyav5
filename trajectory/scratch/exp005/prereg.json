@@ -1,0 +1,24 @@
+{
+  "exp": "exp005",
+  "written": "2026-09-09 — BEFORE any Stage-2 number for this mechanism exists",
+  "mechanism": {"name": "Multi-hypothesis decision at P3 (K=4 sub-cell hypotheses, virtual stride-4 grid, stride-8 evidence)", "kind": "site_wrap", "site": "head.detect",
+                "module": "adapters.yolo26n_visdrone_scratch.modules.mhdetect", "family": "multi-hypothesis-decision", "params_added_measured": null,
+                "source_domain": "target_tracking / statistics (multiple-hypothesis tracking, Reid 1979; mixture density outputs, Bishop 1994)"},
+  "cites_baseline_finding_ids": ["fm_small_gt_missed", "fm_dense_scene_f1_collapse"],
+  "novelty_audit": {
+    "nearest_cv_analog": "sub-pixel convolution (ESPCN, Shi et al. 2016) on features; multi-anchor detection heads (YOLOv3) with size priors",
+    "mechanism_of_difference": "The P3 cls/box output convs emit K=4 hypotheses per stride-8 cell, reshaped (pixel-shuffle) onto a virtual stride-4 anchor grid so each hypothesis owns a sub-cell position; hypotheses compete under the existing one-to-one assignment. No stride-4 features are computed (evidence stays at stride 8), no size priors (unlike anchors), and the shuffle acts on the decision output, not on features (unlike ESPCN). It adds decision slots without adding evidence — by design the complement of exp001.",
+    "regime_argument": "21.5% of VisDrone eval GT centres share a stride-8 cell with another GT (7.8% at stride 4). A one-hypothesis-per-cell head cannot emit both. On COCO, cell sharing at stride 8 is rare, so extra hypotheses are dead slots there."
+  },
+  "discriminators": {
+    "D1": {"statement": "mean AP50 over small-dominated classes {pedestrian, people, bicycle, motor} must RISE vs the seed-matched baseline on every working seed"},
+    "D2_slot_account": {"statement": "PRE-REGISTERED READING (not a pass/fail gate for classification): if the seed-averaged small-class AP50 delta is >= 0.5x exp001's (exp001 seed-avg small-class delta measured from its records at classification time), the 'decision slots' account of exp001 is supported; if < 0.25x, the 'finer evidence' account is supported; between: undetermined."},
+    "on_fail": "classify from P10 as usual; record discriminator_failed; do not credit the multi-hypothesis account"
+  },
+  "kill_bar_seed42_delta": -0.0050, "futility_two_seed_mean_delta": -0.0050, "p9_gate_delta": 0.0050,
+  "noise_floor_s2_map50": 0.004967, "baseline_s2_map50_by_seed": {"42": 0.26970, "123": 0.27327, "7": 0.26830},
+  "control": {"kind": "param_matched_generic (adapter GenericResidualConv) on the P3 cls output of both heads (cv3[0], one2one_cv3[0])", "target_params_each": null, "design": "1x1 residual bottleneck on the 10 logits, width solved to match half the mechanism's added params per head"},
+  "pre_screen_gates": ["dryrun (surgery assert on trainer-built model AND EMA; strides [4,16,32]; anchor count 4x at P3; params; control ratio 0.9-1.1)", "gradcheck (P6' on the new K-hypothesis convs)", "tinyprobe (ratio <= 1.5)"],
+  "expected_verdict_prior": "Hold most likely; a Reject with D1 pass would still answer the slots-vs-evidence question",
+  "budget_estimate_gpu_h": 8
+}

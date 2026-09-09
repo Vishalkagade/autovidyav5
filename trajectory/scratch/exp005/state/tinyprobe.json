@@ -1,0 +1,69 @@
+{
+  "control": {
+    "loss_first": 8.46918,
+    "loss_last": 7.47628,
+    "loss_every_20": [
+      8.46918,
+      8.85128,
+      8.81513,
+      8.7584,
+      8.41273,
+      8.25381,
+      8.20542,
+      7.8768899999999995,
+      7.4461,
+      7.5167
+    ],
+    "wall_min": 0.6772886673609416,
+    "tripwire": {
+      "trainer_model": [
+        "Detect",
+        "GenericResidualConv",
+        "GenericResidualConv",
+        "[8.0, 16.0, 32.0]"
+      ],
+      "ema": [
+        "Detect",
+        "GenericResidualConv",
+        "GenericResidualConv",
+        "[8.0, 16.0, 32.0]"
+      ],
+      "trainer_model_params": 2512004
+    }
+  },
+  "mech": {
+    "loss_first": 9.27663,
+    "loss_last": 8.46059,
+    "loss_every_20": [
+      9.27663,
+      9.367099999999999,
+      9.3023,
+      9.29833,
+      9.1303,
+      9.30316,
+      9.09597,
+      9.03486,
+      8.8858,
+      8.57759
+    ],
+    "wall_min": 0.6305245637893677,
+    "tripwire": {
+      "trainer_model": [
+        "MultiHypDetect",
+        "Sequential",
+        "Sequential",
+        "[4.0, 16.0, 32.0]"
+      ],
+      "ema": [
+        "MultiHypDetect",
+        "Sequential",
+        "Sequential",
+        "[4.0, 16.0, 32.0]"
+      ],
+      "trainer_model_params": 2512008
+    }
+  },
+  "ratio_mech_over_control": 1.1316577228247202,
+  "bar": 1.5,
+  "pass": true
+}

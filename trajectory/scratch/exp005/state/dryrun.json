@@ -1,0 +1,34 @@
+{
+  "mech": {
+    "params_added": 4308,
+    "classes": [
+      "MultiHypDetect",
+      "Sequential",
+      "Sequential",
+      "[4.0, 16.0, 32.0]"
+    ],
+    "out_shape": [
+      1,
+      300,
+      6
+    ],
+    "n_anchors": 27600
+  },
+  "control": {
+    "params_added": 4304,
+    "classes": [
+      "Detect",
+      "GenericResidualConv",
+      "GenericResidualConv",
+      "[8.0, 16.0, 32.0]"
+    ],
+    "out_shape": [
+      1,
+      300,
+      6
+    ],
+    "n_anchors": 8400
+  },
+  "ratio_control_over_mech": 0.9990714948932219,
+  "pass": true
+}
