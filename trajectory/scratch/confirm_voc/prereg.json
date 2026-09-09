@@ -1,0 +1,19 @@
+{
+  "track": "cross-dataset confirmation of exp001 (P2 evidence fusion) — Pascal VOC, NO-REGRESSION leg",
+  "written": "2026-09-10 — BEFORE any VOC number exists",
+  "purpose": "The user's confirmation strategy: a VisDrone Winner is 'a model improvement' only if it wins on a second small-object set (SKU-110K) AND does not regress on a normal-object set (VOC). This leg tests the second condition.",
+  "design": {
+    "train": "VOC07 trainval + VOC12 trainval, 16,551 images, from scratch, nc=20",
+    "frozen_eval": "VOC07 test, 4,952 images (difficult excluded); one full pass on last.pt per run",
+    "train_time_val": "seed-42 500-image subset of the eval (curves only; last.pt lock as on VisDrone)",
+    "tier3": {"imgsz": 640, "batch": 32, "amp": true, "optimizer": "MuSGD", "cache": "ram", "seeds": [42, 123, 7]},
+    "budget_rule": "same pre-registered rule as VisDrone exp000: 200-epoch probe on seed 42 (baseline), s2 = first epoch at 97% of the 11-epoch-median-smoothed val500 peak, ceil 10, clamp [60,150]",
+    "runs": "baseline x3 seeds and P2 x3 seeds at s2; per-image F1 (IoU .5, conf .25) on all 4,952 eval units"
+  },
+  "no_regression_bar": {
+    "statement": "PASS iff (a) seed-averaged mAP50 (P2 - baseline) >= -1x the VOC S2 noise floor (max-min over the 3 baseline seeds) AND (b) the seed-averaged per-unit paired test is NOT significantly unfavorable (bootstrap 95% CI does not lie entirely below 0).",
+    "note": "A WIN on VOC is not required and not expected; v5 measured this mechanism at -0.022 on COCO-2k. A significant loss here means the mechanism is a small-object specialisation, and the claim stays 'a VisDrone Winner'."
+  },
+  "expected_outcome_prior": "Uncertain. v5's COCO-2k result (-0.022) predicts regression; VOC objects are large (median ~150 px native) so the stride-4 path is redundant; the from-scratch regime and 16.5k images may absorb it. Honest prior ~50/50 on the bar.",
+  "budget_estimate_gpu_h": 20
+}

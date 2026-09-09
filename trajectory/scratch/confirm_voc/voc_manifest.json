@@ -1,0 +1,19 @@
+{
+  "dataset_root": "/home/vishalkagade/datasets/VOC",
+  "train": {
+    "n": 16551,
+    "sha256": "0240b9d6367df354699ef9daf303429aa4affed1b8326def714565840b272413",
+    "labels_sha256": "abd5c344dc7a502d96a01a8ef645b45b1a2ee4a526c326dcb0b831ecf78dc843"
+  },
+  "eval": {
+    "n": 4952,
+    "sha256": "ee0b732222d1c819567afe9fabd69640453957669040f67c51644560bacc0a59",
+    "labels_sha256": "26d69d43ca472527186ae06e0f0a15872aab1bdf88f9579af2432e590b34f159",
+    "definition": "VOC07 test, difficult objects excluded (ultralytics conversion)"
+  },
+  "val500": {
+    "n": 500,
+    "seed": 42,
+    "sha256": "0e085c4ee9340286828304c338d0bcfdae44b95b2ffc92add1290f4ad0b5e429"
+  }
+}
