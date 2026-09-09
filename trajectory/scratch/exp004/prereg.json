@@ -1,0 +1,28 @@
+{
+  "exp": "exp004",
+  "written": "2026-09-09 — BEFORE any Stage-2 number for this mechanism exists",
+  "mechanism": {"name": "Horvitz-Thompson detection-probability loss reweighting", "kind": "aux_objective", "site": null,
+                "family": "estimator-weighting", "params_added_measured": 0,
+                "source_domain": "statistical_ecology (distance sampling; Horvitz & Thompson 1952 unbiased estimation under unequal detection probability)",
+                "weights_1_over_p": {"small": 4.37, "medium": 1.67, "large": 1.37, "basis": "exp000 seed-123 per-scale recall small 0.2288 / medium 0.5983 / large 0.7317; normalised to mean 1 over positives per batch"}},
+  "cites_baseline_finding_ids": ["fm_small_gt_missed", "fm_dense_scene_f1_collapse"],
+  "novelty_audit": {
+    "nearest_cv_analog": "focal loss (weight by predicted confidence) / class-balanced loss (weight by class frequency)",
+    "mechanism_of_difference": "Each positive target's classification and box loss is multiplied by 1/p(scale bucket of the target), where p is the detection probability MEASURED on the Phase-0 baseline per COCO area bucket, then normalised to mean 1 over the batch's positives. It is an estimator correction (Horvitz-Thompson) fixed from data, not a per-sample hardness heuristic (focal) nor a class-frequency prior; it changes which targets the gradient budget is spent on, from step 0, with no parameters and no architecture change.",
+    "regime_argument": "The correction is only large where detection probability varies strongly with scale: here p_small/p_large = 0.31 and 68% of GT is small (exp000), so the HT weights are 4.4/1.7/1.4 and cover most targets. On COCO, tuned detectors have far flatter p(scale) and the same objective is near-identity."
+  },
+  "discriminators": {
+    "D1": {"statement": "mean AP50 over small-dominated classes {pedestrian, people, bicycle, motor} must RISE vs the seed-matched baseline on every working seed"},
+    "D2": {"statement": "that rise must EXCEED the mean AP50 change of large-dominated classes {bus, truck} on every working seed (gain is scale-structured)"},
+    "baseline_per_class_source": "trajectory/scratch/exp000/state/per_class_S2_seed{seed}.json (computed before exp004 starts)",
+    "on_fail": "classify from P10 as usual; record discriminator_failed; do not credit the estimator-correction account"
+  },
+  "kill_bar_seed42_delta": -0.0050, "futility_two_seed_mean_delta": -0.0050, "p9_gate_delta": 0.0050,
+  "noise_floor_s2_map50": 0.004967, "baseline_s2_map50_by_seed": {"42": 0.26970, "123": 0.27327, "7": 0.26830},
+  "control": {"kind": "permuted-weight placebo (designed for this experiment; zero-param objective has no param-matched generic block)",
+              "design": "same per-batch weight multiset, randomly permuted across positive anchors (torch generator seeded by the run seed) — identical loss scale and variance, no size structure",
+              "tripwire": "applied_batches counter and running mean weight on both variants; mechanism must show weight-vs-area correlation > 0, control ~0"},
+  "pre_screen_gates": ["dryrun (loss runs on a CPU batch; weights per bucket as pre-registered; tripwire increments)", "gradcheck (P6' n/a for zero-param objective — recorded as such; instead assert loss differs from vanilla on a batch)", "tinyprobe (ratio <= 1.5)"],
+  "expected_verdict_prior": "Hold or Reject (honest prior 1-2x floor)",
+  "budget_estimate_gpu_h": 8
+}

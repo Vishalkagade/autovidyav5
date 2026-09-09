@@ -1,0 +1,46 @@
+{
+  "seed": 7,
+  "weights": "/home/vishalkagade/vishal/autovidyav5/runs_visdrone/exp000_S2_seed7/weights/last.pt",
+  "per_class_ap50": [
+    {
+      "class_name": "pedestrian",
+      "value": 0.258922371200354
+    },
+    {
+      "class_name": "people",
+      "value": 0.19591156999439577
+    },
+    {
+      "class_name": "bicycle",
+      "value": 0.05440571716526455
+    },
+    {
+      "class_name": "car",
+      "value": 0.6753210328843089
+    },
+    {
+      "class_name": "van",
+      "value": 0.2848082551615955
+    },
+    {
+      "class_name": "truck",
+      "value": 0.23721900802993012
+    },
+    {
+      "class_name": "tricycle",
+      "value": 0.1502660611733366
+    },
+    {
+      "class_name": "awning-tricycle",
+      "value": 0.11961075383745018
+    },
+    {
+      "class_name": "bus",
+      "value": 0.4282436617738413
+    },
+    {
+      "class_name": "motor",
+      "value": 0.27833078595033833
+    }
+  ]
+}
