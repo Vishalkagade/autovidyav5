@@ -1,0 +1,151 @@
+{
+  "id": "exp004",
+  "phase": "phase-1",
+  "adapter_name": "yolo26n_visdrone_scratch",
+  "mechanism": {
+    "name": "Horvitz-Thompson detection-probability loss reweighting",
+    "source_domain": "statistical_ecology (distance sampling; Horvitz & Thompson 1952 unbiased estimation under unequal detection probability)",
+    "kind": "aux_objective",
+    "family": "estimator-weighting",
+    "site": null,
+    "params_count": 0
+  },
+  "cites_baseline_finding_ids": [
+    "fm_small_gt_missed",
+    "fm_dense_scene_f1_collapse"
+  ],
+  "novelty_audit": {
+    "nearest_cv_analog": "focal loss (weight by predicted confidence) / class-balanced loss (weight by class frequency)",
+    "mechanism_of_difference": "Each positive target's classification and box loss is multiplied by 1/p(scale bucket of the target), where p is the detection probability MEASURED on the Phase-0 baseline per COCO area bucket, then normalised to mean 1 over the batch's positives. It is an estimator correction (Horvitz-Thompson) fixed from data, not a per-sample hardness heuristic (focal) nor a class-frequency prior; it changes which targets the gradient budget is spent on, from step 0, with no parameters and no architecture change. REGIME ARGUMENT: The correction is only large where detection probability varies strongly with scale: here p_small/p_large = 0.31 and 68% of GT is small (exp000), so the HT weights are 4.4/1.7/1.4 and cover most targets. On COCO, tuned detectors have far flatter p(scale) and the same objective is near-identity.",
+    "regime_argument": "The correction is only large where detection probability varies strongly with scale: here p_small/p_large = 0.31 and 68% of GT is small (exp000), so the HT weights are 4.4/1.7/1.4 and cover most targets. On COCO, tuned detectors have far flatter p(scale) and the same objective is near-identity.",
+    "nearest_cv_block": "focal loss (weight by predicted confidence) / class-balanced loss (weight by class frequency)",
+    "structural_difference": "Each positive target's classification and box loss is multiplied by 1/p(scale bucket of the target), where p is the detection probability MEASURED on the Phase-0 baseline per COCO area bucket, then normalised to mean 1 over the batch's positives. It is an estimator correction (Horvitz-Thompson) fixed from data, not a per-sample hardness heuristic (focal) nor a class-frequency prior; it changes which targets the gradient budget is spent on, from step 0, with no parameters and no architecture change."
+  },
+  "stages_run": [
+    "S2"
+  ],
+  "metrics_per_stage_per_seed": {
+    "S2": {
+      "42": {
+        "primary": 0.25834236578778863,
+        "secondary": {
+          "mAP50_95": 0.13718896278604154,
+          "precision": 0.3587046954523377,
+          "recall": 0.28523116423352857
+        }
+      }
+    }
+  },
+  "stage1_curve": {
+    "42": [
+      0.00194,
+      0.03003,
+      0.05441,
+      0.09571,
+      0.10771,
+      0.12524,
+      0.13889,
+      0.13188,
+      0.16351,
+      0.16557,
+      0.17224,
+      0.17688,
+      0.18255,
+      0.18601,
+      0.19205,
+      0.19821,
+      0.20175,
+      0.1993,
+      0.20848,
+      0.19956,
+      0.20727,
+      0.20672,
+      0.2075,
+      0.2133,
+      0.21768,
+      0.22215,
+      0.2305,
+      0.23017,
+      0.2292,
+      0.23128,
+      0.22819,
+      0.23333,
+      0.22655,
+      0.23755,
+      0.23433,
+      0.2417,
+      0.24117,
+      0.24178,
+      0.24187,
+      0.24173,
+      0.24715,
+      0.25254,
+      0.24814,
+      0.25033,
+      0.25375,
+      0.25897,
+      0.25685,
+      0.25847,
+      0.25708,
+      0.25951,
+      0.26072,
+      0.25994,
+      0.25884,
+      0.25808,
+      0.26204,
+      0.26389,
+      0.26437,
+      0.26143,
+      0.26403,
+      0.26029,
+      0.26206,
+      0.26819,
+      0.26408,
+      0.26704,
+      0.26439,
+      0.26898,
+      0.26918,
+      0.27186,
+      0.2728,
+      0.27342,
+      0.26492,
+      0.26655,
+      0.26622,
+      0.26883,
+      0.27002,
+      0.27098,
+      0.26972,
+      0.27134,
+      0.27175,
+      0.27218
+    ]
+  },
+  "provenance": {
+    "git_commit": "d6c9b39d1b4271cee7afc96d46bcce8f5c4daf92",
+    "data_manifest_sha256": "89cbdc099b44847e8d69b5d3f507c39483be8ab742a81a3716c98dd4ae9794a2",
+    "ultralytics_commit": "b10fa7be231820cea668c52af45b25d07ff65968"
+  },
+  "created_at": "2026-09-09T14:35:45+00:00",
+  "boldness": "bold",
+  "attribution": {
+    "type": "scientific",
+    "subtype": "screened-out",
+    "evidence": "seed deltas mAP50 {'42': -0.01135528363205457}; seed-avg mech-baseline -0.0114 (-2.3x floor); discriminators D1 small-class AP50 deltas {42: +0.0053} vs large-class {42: -0.0285} -> PASS; no gate line; Screen KILL at seed 42: -0.0114 mAP50 (2.3x floor, negative). Tripwire: HT loss applied on 32,480 criterion calls, weight-area correlation -0.37 (mechanism), mean weight 1.0. The reweighting did what it says and the trade is zero-sum: small recall +0.026 (0.229->0.255) and small-dominated classes +0.007..+0.009 AP50, but medium recall -0.066, large recall -0.054, vehicle classes -0.012 (car) to -0.033 (truck). Discriminators D1 and D2 PASSED on the one seed run \u2014 the estimator-correction account is what happened, and it is net harmful: emphasis moves detections between scales rather than adding them. Supports the exp001 reading that the missing computation is resolution (evidence), not gradient allocation. Operational regret: 70 min wall-clock lost to a driver syntax error before the run (0 GPU-h). P2 ledger: estimator-weighting @ objective = 1 failure."
+  },
+  "classification": "Kill",
+  "discriminator": {
+    "statement": "mean AP50 over small-dominated classes {pedestrian, people, bicycle, motor} must RISE vs the seed-matched baseline on every working seed AND that rise must EXCEED the mean AP50 change of large-dominated classes {bus, truck} on every working seed (gain is scale-structured)",
+    "by_seed": {
+      "42": {
+        "D1_small_class_ap50_delta": 0.0052811766442674435,
+        "D2_large_class_ap50_delta": -0.028486164786313217,
+        "D1_pass": true,
+        "D2_pass": true,
+        "delta": 0.0052811766442674435
+      }
+    },
+    "pass": true
+  },
+  "cost_gpu_hours": 0.7293713189495935,
+  "notes": "Screen KILL at seed 42: -0.0114 mAP50 (2.3x floor, negative). Tripwire: HT loss applied on 32,480 criterion calls, weight-area correlation -0.37 (mechanism), mean weight 1.0. The reweighting did what it says and the trade is zero-sum: small recall +0.026 (0.229->0.255) and small-dominated classes +0.007..+0.009 AP50, but medium recall -0.066, large recall -0.054, vehicle classes -0.012 (car) to -0.033 (truck). Discriminators D1 and D2 PASSED on the one seed run \u2014 the estimator-correction account is what happened, and it is net harmful: emphasis moves detections between scales rather than adding them. Supports the exp001 reading that the missing computation is resolution (evidence), not gradient allocation. Operational regret: 70 min wall-clock lost to a driver syntax error before the run (0 GPU-h). P2 ledger: estimator-weighting @ objective = 1 failure."
+}

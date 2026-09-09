@@ -25,6 +25,20 @@ def main():
     ctl = {s: L(f"{ST}/control_S2_seed{s}.json") for s in SEEDS if ex(f"{ST}/control_S2_seed{s}.json")}
     base = {s: L(f"{B}/S2_seed{s}.json") for s in SEEDS}
     bps = {s: L(f"{B}/per_scale_S2_seed{s}.json")["per_scale_recall"] for s in SEEDS}
+    screen = L(f"{ST}/screen_seed42.json") if ex(f"{ST}/screen_seed42.json") else None
+    log = open("trajectory/scratch/exp004/local.log").read()
+    out = {"id": "exp004", "phase": "phase-1", "adapter_name": "yolo26n_visdrone_scratch",
+           "mechanism": {"name": prereg["mechanism"]["name"], "source_domain": prereg["mechanism"]["source_domain"], "kind": "aux_objective",
+                         "family": prereg["mechanism"]["family"], "site": prereg["mechanism"]["site"], "params_count": prereg["mechanism"]["params_added_measured"]},
+           "cites_baseline_finding_ids": prereg["cites_baseline_finding_ids"], "novelty_audit": {**prereg["novelty_audit"], "nearest_cv_analog": prereg["novelty_audit"]["nearest_cv_analog"], "nearest_cv_block": prereg["novelty_audit"]["nearest_cv_analog"], "structural_difference": prereg["novelty_audit"]["mechanism_of_difference"], "mechanism_of_difference": prereg["novelty_audit"]["mechanism_of_difference"] + " REGIME ARGUMENT: " + prereg["novelty_audit"]["regime_argument"]},
+           "stages_run": ["S2"], "metrics_per_stage_per_seed": {"S2": {str(s): {"primary": m["primary"], "secondary": m["secondary"]} for s, m in mech.items()}},
+           "stage1_curve": {str(s): m["curve_val500_map50"] for s, m in mech.items()},
+           "provenance": {"git_commit": subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip(),
+                          "data_manifest_sha256": hashlib.sha256(open("visdrone_manifest.json", "rb").read()).hexdigest(),
+                          "ultralytics_commit": subprocess.run(["git", "-C", "../ultralytics_src", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()},
+           "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "boldness": "bold"}
+    # discriminator
+    bu0 = by_seed(B + "/per_unit_S2_seed{}.json", SEEDS); mu0 = by_seed(ST + "/per_unit_S2_mech_seed{}.json", SEEDS)
     SMALL = ("pedestrian", "people", "bicycle", "motor"); LARGE = ("bus", "truck")
     bpc = {s: {c["class_name"]: c["value"] for c in L(f"{B}/per_class_S2_seed{s}.json")["per_class_ap50"]} for s in SEEDS}
     def grp(d, names): return sum(d[n] for n in names) / len(names)

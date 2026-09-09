@@ -116,3 +116,12 @@ file during Phase-0.**
   [-0.0031,+0.0010]) and no gain in >=100-box scenes. Proposals citing
   fm_dense_scene_f1_collapse must target recall under crowding (missed
   neighbours), not redundancy. evidence: exp003. status: active.
+- `ins_009` — claim: re-allocating gradient toward small objects is zero-sum
+  on from-scratch YOLO26n/VisDrone: Horvitz-Thompson 1/p(scale) loss
+  weighting (4.4x small, verified applied, weight-area corr -0.37) raised
+  small recall +0.026 and small-class AP50 +0.007..+0.009 while medium/large
+  recall fell -0.066/-0.054 and vehicle classes lost 0.012-0.033 AP50, net
+  -0.0114 mAP50 (Kill at seed 42). Emphasis moves detections between scales;
+  only added evidence (exp001, stride-4 path) adds them. Objective-side
+  small-object proposals need a mechanism that does not borrow capacity from
+  the other scales. evidence: exp004 (+ exp001 contrast). status: active.

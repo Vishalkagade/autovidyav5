@@ -5,7 +5,7 @@
   "hypothesis": "YOLO26+COCO is a co-evolved local optimum; mechanisms nulled on COCO-2k may work on tiny-object aerial imagery where that equilibrium does not hold",
   "eval_set": "FROZEN: val + test-dev = 2,158 images (user decision 2026-08-21)",
   "confirmation_strategy": "a VisDrone Winner must replicate on 2 more datasets before being claimed as a model improvement: one small-object set (SKU-110K; win required) and one normal-object set (Pascal VOC; no-regression bar). User decision 2026-09-07: three small-object wins would only prove a small-object helper.",
-  "phase": "Phase-1 \u2014 exp003 Reject",
+  "phase": "Phase-1 \u2014 exp004 Kill",
   "eval_checkpoint": "last.pt (Tier-3, pre-registered 2026-09-07 \u2014 best.pt selection sees 23% of the frozen eval via val500)",
   "calibration": {
     "s1_epochs": 30,
@@ -82,6 +82,19 @@
       "small_recall_delta": -0.0014121557332231194,
       "f1_zero_mass_delta": -0.00046339202965708925,
       "classification": "Reject"
+    },
+    {
+      "exp": "exp004",
+      "family": "estimator-weighting",
+      "site": null,
+      "params_added": 0,
+      "mAP50": 0.25834236578778863,
+      "mAP50_delta": -0.01135528363205457,
+      "mAP50_95_delta": -0.010516484532659881,
+      "small_recall": 0.2547692546142619,
+      "small_recall_delta": 0.02572878860286995,
+      "f1_zero_mass_delta": 0.0046339202965708995,
+      "classification": "Kill"
     }
   ],
   "cwm": [
@@ -106,6 +119,14 @@
       "kind": "operational",
       "regret_gpu_h": 0.891,
       "lesson": "A source-domain constraint (non-negative pooling weights) left unenforced in code let the optimizer drive log() to NaN. Encode every sign/range constraint of the source model as a parameterisation, and make the module self-check adversarial parameter values before the first GPU epoch. Tiny-overfit probes (200 iters) do not reach the divergence regime."
+    },
+    {
+      "exp": "exp004",
+      "date": "2026-09-09",
+      "kind": "operational",
+      "regret_gpu_h": 0.0,
+      "wall_delay_h": 1.2,
+      "lesson": "A sed edit inserted a comment before a line continuation; the pipeline's first step failed silently (error only in the per-step log) and the GPU idled 70 min. Fix: pipeline prints FAILED on any step failure and monitors match it; never sed-edit multi-line expressions \u2014 use a parser-checked edit."
     }
   ]
 }

@@ -1,18 +1,18 @@
 {
   "native_to_input_scale": 0.42108324127458446,
   "mech": {
-    "loss_total": 64.65234375,
+    "loss_total": 62.697994232177734,
     "applied_batches": 2,
-    "n_pos": 2498,
-    "mean_w": 1.0,
-    "weight_area_corr": -0.2107892096133553
+    "n_pos": 2448,
+    "mean_w": 0.9999998753366907,
+    "weight_area_corr": -0.27837540784563763
   },
   "control": {
-    "loss_total": 70.41443634033203,
+    "loss_total": 71.38768768310547,
     "applied_batches": 2,
-    "n_pos": 2498,
-    "mean_w": 0.9999997800975156,
-    "weight_area_corr": -0.015217606528474377
+    "n_pos": 2448,
+    "mean_w": 0.9999998878030216,
+    "weight_area_corr": -0.013337191033546122
   },
-  "pass": false
+  "pass": true
 }
