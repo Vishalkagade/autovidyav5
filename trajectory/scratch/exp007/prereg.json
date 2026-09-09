@@ -1,0 +1,25 @@
+{
+  "exp": "exp007",
+  "written": "2026-09-10 — BEFORE any Stage-2 number for this mechanism exists",
+  "mechanism": {"name": "Sibling-pair margin objective (ECOC one-bit margin on measured confusion pairs)", "kind": "aux_objective", "site": null, "family": "code-margin",
+                "params_added_measured": 0, "margin": 2.0, "lambda": 0.5,
+                "pairs": [["pedestrian","people"],["bicycle","motor"],["car","van"],["truck","bus"],["tricycle","awning-tricycle"]],
+                "source_domain": "coding_theory (error-correcting output codes, Dietterich & Bakiri 1995)"},
+  "cites_baseline_finding_ids": ["fm_sibling_class_confusion"],
+  "novelty_audit": {
+    "nearest_cv_analog": "hierarchical softmax (YOLO9000) and pairwise margin / contrastive class losses",
+    "mechanism_of_difference": "No tree and no extra outputs: a softplus margin on the difference between the assigned class logit and its measured sibling's logit, for positives of paired classes only, added to the cls loss from step 0. The pairs are fixed from Phase-0 confusion data (the code's distance-1 pairs), not learned and not a taxonomy prior.",
+    "regime_argument": "On COCO-2k an ECOC objective closed a train/val cls gap with a null mAP effect (v5 exp006) — the gap was a symptom. On VisDrone the sibling confusion is measured ON the frozen eval as the outcome (van->car 58% of located vans) and mAP50 is class-aware, so any reduction is metric-visible. Counter-risk, stated: exp001 showed resolution is the lever; the margin may be unattainable at 30 px."
+  },
+  "discriminators": {
+    "D1": {"statement": "sibling-pair confusion rate (located objects of a paired class assigned the sibling class / located objects of that class, adapter matcher, conf .25, summed over the five pairs) must FALL vs the seed-matched baseline on every working seed", "baseline_source": "trajectory/scratch/exp000/state/sibconf_S2_seed{seed}.json"},
+    "D2": {"statement": "mean AP50 over the five worst-confused classes {van, bicycle, awning-tricycle, people, truck} must RISE vs the seed-matched baseline on every working seed"},
+    "on_fail": "classify from P10 as usual; record discriminator_failed; do not credit the code-margin account"
+  },
+  "kill_bar_seed42_delta": -0.0050, "futility_two_seed_mean_delta": -0.0050, "p9_gate_delta": 0.0050,
+  "noise_floor_s2_map50": 0.004967, "baseline_s2_map50_by_seed": {"42": 0.26970, "123": 0.27327, "7": 0.26830},
+  "control": {"kind": "placebo objective (designed for this experiment): the same margin loss on a fixed random NON-sibling pairing", "pairs": [["pedestrian","truck"],["people","van"],["bicycle","bus"],["car","awning-tricycle"],["tricycle","motor"]], "tripwire": "applied_batches and mean margin term on both variants"},
+  "pre_screen_gates": ["dryrun (loss runs on a CPU batch; term > 0; tripwire increments 2/batch)", "lossdiff (loss differs from vanilla; cls-grad direction differs)", "tinyprobe (ratio <= 1.5)"],
+  "expected_verdict_prior": "Hold or Reject (0.5-1x floor)",
+  "budget_estimate_gpu_h": 6
+}

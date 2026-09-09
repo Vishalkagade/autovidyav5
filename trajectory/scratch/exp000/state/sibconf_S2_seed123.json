@@ -1,0 +1,59 @@
+{
+  "seed": 123,
+  "weights": "/home/vishalkagade/vishal/autovidyav5/runs_visdrone/exp000_S2_seed123/weights/last.pt",
+  "per_class": {
+    "pedestrian": {
+      "located": 6279,
+      "as_sibling": 152,
+      "rate": 0.024207676381589424
+    },
+    "people": {
+      "located": 1663,
+      "as_sibling": 416,
+      "rate": 0.25015033072760073
+    },
+    "bicycle": {
+      "located": 373,
+      "as_sibling": 213,
+      "rate": 0.5710455764075067
+    },
+    "car": {
+      "located": 27265,
+      "as_sibling": 1171,
+      "rate": 0.04294883550339263
+    },
+    "van": {
+      "located": 4527,
+      "as_sibling": 2627,
+      "rate": 0.5802960017671748
+    },
+    "truck": {
+      "located": 1314,
+      "as_sibling": 142,
+      "rate": 0.1080669710806697
+    },
+    "tricycle": {
+      "located": 384,
+      "as_sibling": 31,
+      "rate": 0.08072916666666667
+    },
+    "awning-tricycle": {
+      "located": 270,
+      "as_sibling": 62,
+      "rate": 0.22962962962962963
+    },
+    "bus": {
+      "located": 1477,
+      "as_sibling": 215,
+      "rate": 0.14556533513879485
+    },
+    "motor": {
+      "located": 2351,
+      "as_sibling": 41,
+      "rate": 0.017439387494683115
+    }
+  },
+  "pooled_rate": 0.11045029736618521,
+  "located_total": 45903,
+  "confused_total": 5070
+}

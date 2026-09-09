@@ -1,0 +1,15 @@
+{
+  "mech": {
+    "loss_total": 76.86822509765625,
+    "applied_batches": 2,
+    "n_pos_paired": 2375,
+    "mean_margin_term": 2.113396167755127
+  },
+  "control": {
+    "loss_total": 76.8205795288086,
+    "applied_batches": 2,
+    "n_pos_paired": 2375,
+    "mean_margin_term": 2.0941306352615356
+  },
+  "pass": true
+}

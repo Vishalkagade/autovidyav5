@@ -1,0 +1,95 @@
+{
+  "control": {
+    "loss_first": 8.97504,
+    "loss_last": 7.77869,
+    "loss_every_20": [
+      8.97504,
+      9.35819,
+      9.32074,
+      9.47278,
+      9.13867,
+      8.9847,
+      8.91478,
+      8.69674,
+      8.13243,
+      8.14185
+    ],
+    "wall_min": 0.6089608748753865,
+    "tripwire": {
+      "applied_batches": 400,
+      "n_pos_paired": 474729,
+      "mean_margin_term": 1.7902894338965416,
+      "criterion": "SiblingMarginLoss",
+      "variant_pairs": [
+        [
+          "pedestrian",
+          "truck"
+        ],
+        [
+          "people",
+          "van"
+        ],
+        [
+          "bicycle",
+          "bus"
+        ],
+        [
+          "car",
+          "awning-tricycle"
+        ],
+        [
+          "tricycle",
+          "motor"
+        ]
+      ]
+    }
+  },
+  "mech": {
+    "loss_first": 8.98694,
+    "loss_last": 7.77888,
+    "loss_every_20": [
+      8.98694,
+      9.37138,
+      9.31034,
+      9.46388,
+      9.12379,
+      8.96472,
+      8.83476,
+      8.58194,
+      8.13565,
+      7.893260000000001
+    ],
+    "wall_min": 0.7134429375330608,
+    "tripwire": {
+      "applied_batches": 400,
+      "n_pos_paired": 474271,
+      "mean_margin_term": 1.8278308445215226,
+      "criterion": "SiblingMarginLoss",
+      "variant_pairs": [
+        [
+          "pedestrian",
+          "people"
+        ],
+        [
+          "bicycle",
+          "motor"
+        ],
+        [
+          "car",
+          "van"
+        ],
+        [
+          "truck",
+          "bus"
+        ],
+        [
+          "tricycle",
+          "awning-tricycle"
+        ]
+      ]
+    }
+  },
+  "ratio_mech_over_control": 1.0000244257066422,
+  "bar": 1.5,
+  "pass": true
+}
