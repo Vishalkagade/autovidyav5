@@ -1,0 +1,65 @@
+{
+  "control": {
+    "loss_first": 8.46918,
+    "loss_last": 7.4447,
+    "loss_every_20": [
+      8.46918,
+      8.85128,
+      8.81513,
+      8.89225,
+      8.53945,
+      8.5617,
+      8.35528,
+      8.03078,
+      7.54847,
+      7.39594
+    ],
+    "wall_min": 0.6412508249282837,
+    "tripwire": {
+      "trainer_model": [
+        "GenericResidualConv",
+        "GenericResidualConv",
+        "GenericResidualConv"
+      ],
+      "ema": [
+        "GenericResidualConv",
+        "GenericResidualConv",
+        "GenericResidualConv"
+      ],
+      "trainer_model_params": 2507982
+    }
+  },
+  "mech": {
+    "loss_first": 8.46917,
+    "loss_last": 7.39619,
+    "loss_every_20": [
+      8.46917,
+      8.85127,
+      8.81512,
+      8.904589999999999,
+      8.63929,
+      8.57131,
+      8.443950000000001,
+      8.03007,
+      7.656879999999999,
+      7.7039
+    ],
+    "wall_min": 0.625898806254069,
+    "tripwire": {
+      "trainer_model": [
+        "DivNorm",
+        "DivNorm",
+        "DivNorm"
+      ],
+      "ema": [
+        "DivNorm",
+        "DivNorm",
+        "DivNorm"
+      ],
+      "trainer_model_params": 2507976
+    }
+  },
+  "ratio_mech_over_control": 0.9934839550284095,
+  "bar": 1.5,
+  "pass": true
+}

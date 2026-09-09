@@ -57,8 +57,9 @@ class DivNorm(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         with torch.autocast(device_type=x.device.type, enabled=False):
             xf = x.float()
-            pooled = F.conv2d(torch.sigmoid(xf), self.w, padding=self.k // 2, groups=self.nc)
-            return (xf - self.n * torch.log(self.sigma + pooled)).to(x.dtype)
+            # parameters may be half when ultralytics validates with model.half(); compute everything in fp32
+            pooled = F.conv2d(torch.sigmoid(xf), self.w.float(), padding=self.k // 2, groups=self.nc)
+            return (xf - self.n.float() * torch.log(self.sigma.float() + pooled)).to(x.dtype)
 
 
 def demo() -> None:

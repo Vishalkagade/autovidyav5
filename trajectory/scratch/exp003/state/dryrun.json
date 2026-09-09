@@ -1,0 +1,30 @@
+{
+  "mech": {
+    "params_added": 276,
+    "classes": [
+      "DivNorm",
+      "DivNorm",
+      "DivNorm"
+    ],
+    "out_shape": [
+      1,
+      300,
+      6
+    ]
+  },
+  "control": {
+    "params_added": 282,
+    "classes": [
+      "GenericResidualConv",
+      "GenericResidualConv",
+      "GenericResidualConv"
+    ],
+    "out_shape": [
+      1,
+      300,
+      6
+    ]
+  },
+  "ratio_control_over_mech": 1.0217391304347827,
+  "pass": true
+}
