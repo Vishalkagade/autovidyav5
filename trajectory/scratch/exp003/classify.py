@@ -61,7 +61,9 @@ def main():
     if len(cu) >= 2 and len(mu) >= 2:
         p10["vs_control"] = t2d(paired_unit_test({s: mu[s] for s in cu}, {s: cu[s] for s in cu}))
         p10["control_vs_baseline"] = t2d(paired_unit_test({s: cu[s] for s in cu}, {s: bu[s] for s in cu}))
-    if p10: out["p10"] = p10
+    if p10:
+        if "vs_control" in p10: out["p10"] = p10
+        else: out["p10_partial"] = {**p10, "note": "P9 control-deferral gate SHUT — control not run; schema requires vs_control inside p10, so the vs-baseline test is recorded here (program.md: omit p9 when the gate skips)"}
     p9 = None
     if ctl:
         cb = sum(ctl[s]["primary"] for s in ctl) / len(ctl); bb = sum(base[s]["primary"] for s in ctl) / len(ctl); mm = sum(mech[s]["primary"] for s in ctl) / len(ctl)

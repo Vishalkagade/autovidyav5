@@ -17,3 +17,6 @@ seed,stage,gpu_hours,cumulative
 1000,exp001_mech_p11,4.046,29.927
 2000,exp001_mech_p11,4.040,33.967
 42,exp002_mech,0.891,34.858
+42,exp003_mech,0.727,35.585
+123,exp003_mech,0.728,36.313
+7,exp003_mech,0.729,37.042

@@ -108,3 +108,11 @@ file during Phase-0.**
   parameterisation, and modules must self-check adversarial parameter values;
   200-iteration overfit probes cannot catch mid-training divergence.
   evidence: exp002. status: active (operational).
+- `ins_008` — claim: on VisDrone the NMS-free head's residual duplicates
+  (8.4-8.7% of predictions at conf .25) are not what limits dense-scene
+  performance: a learned divisive-normalization field reduced duplicates on
+  every seed (-0.003 to -0.006 absolute) and pure false positives (~-0.01)
+  with a null effect on mAP50 (mean -0.00004) and per-unit F1 (CI
+  [-0.0031,+0.0010]) and no gain in >=100-box scenes. Proposals citing
+  fm_dense_scene_f1_collapse must target recall under crowding (missed
+  neighbours), not redundancy. evidence: exp003. status: active.
