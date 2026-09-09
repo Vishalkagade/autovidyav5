@@ -84,7 +84,7 @@ def main():
         same_sign = all(v > 0 for v in vb.get("per_seed_means", {}).values()) if vb else False
         if p9 and p9["attribution_pass"] and vb.get("verdict") == "pass" and vc.get("verdict") == "pass" and same_sign: cls, sub = "Provisional Winner", "winner-verified"
         elif p9 and vb.get("verdict") == "pass" and vc.get("verdict") != "pass": cls, sub = "Hold", "capacity-explains-gain"
-        elif vb.get("mean_diff", 0) > 0: cls, sub = "Hold", "direction-consistent-ns"
+        elif vb.get("mean_diff", 0) > 0 and all(v > 0 for v in vb.get("per_seed_means", {}).values()): cls, sub = "Hold", "direction-consistent-ns"   # Hold = same sign on EVERY seed
         else: cls, sub = "Reject", "noise-floor"
     gate = [l for l in log.splitlines() if "P9_CONTROL_GATE" in l]
     evidence = (f"seed deltas mAP50 {per_seed_delta}; seed-avg mech-baseline {mb:+.4f} ({mb/floor:+.1f}x floor); discriminators D1 small-class AP50 deltas {{{', '.join(f'{k}: {v['D1_small_class_ap50_delta']:+.4f}' for k, v in disc.items() if k != 'slot_account')}}} vs large-class {{{', '.join(f'{k}: {v['D2_large_class_ap50_delta']:+.4f}' for k, v in disc.items() if k != 'slot_account')}}}; evidence-account reading: {disc.get('slot_account', {}).get('reading')} -> {'PASS' if disc_pass else 'FAIL (discriminator_failed)'}; "

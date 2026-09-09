@@ -135,3 +135,14 @@ file during Phase-0.**
   small objects rather than find them. Combined with exp004 (emphasis is
   zero-sum) the ledger says the P2 head's value is the stride-4 EVIDENCE
   path. evidence: exp005 (+ exp001, exp004). status: active.
+- `ins_011` — claim: the P2 head's gain (exp001, +0.015) is the CONJUNCTION
+  of stride-4 evidence and a stride-4 decision grid, not either alone:
+  stride-4 evidence carried losslessly (polyphase / space-to-depth route,
+  +10.3k params) into the stride-8 P3 fusion gives +0.0002 mAP50 and 0.08x
+  of exp001's small-class gain (exp006, evidence account refuted at the
+  pre-registered 0.25x bar); stride-4 decision slots with stride-8 evidence
+  give 0.26x and negative per-unit F1 (exp005). A finer decision grid only
+  pays when the features under it are finer too, and finer features only
+  pay when a decision is made at their resolution. Cheap halves of the P2
+  head do not exist at this scale; the 3x wall-clock is the price.
+  evidence: exp006, exp005, exp001. status: active.
