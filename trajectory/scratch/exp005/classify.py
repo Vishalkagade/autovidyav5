@@ -91,7 +91,7 @@ def main():
                 + (gate[-1].split('] ')[1] if gate else "no gate line") + ("; " + a.notes if a.notes else ""))
     out["attribution"] = {"type": "scientific" if cls != "Op-Fail" else "operational", "subtype": sub, "evidence": evidence}
     out["classification"] = cls
-    out["discriminator"] = {"statement": prereg["discriminators"]["D1"]["statement"] + " AND " + prereg["discriminators"]["D2"]["statement"], "by_seed": disc, "pass": disc_pass}
+    out["discriminator"] = {"statement": prereg["discriminators"]["D1"]["statement"] + " | reading: " + prereg["discriminators"]["D2_slot_account"]["statement"], "by_seed": disc, "pass": disc_pass}
     gpu = sum(m["wall_min"] for m in mech.values()) / 60 + sum(c["wall_min"] for c in ctl.values()) / 60
     out["cost_gpu_hours"] = gpu; out["notes"] = a.notes
     import jsonschema; errs = [e.message for e in jsonschema.Draft202012Validator(L("core/schemas/experiment.schema.json")).iter_errors(out)]

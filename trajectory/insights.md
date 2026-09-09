@@ -125,3 +125,13 @@ file during Phase-0.**
   only added evidence (exp001, stride-4 path) adds them. Objective-side
   small-object proposals need a mechanism that does not borrow capacity from
   the other scales. evidence: exp004 (+ exp001 contrast). status: active.
+- `ins_010` — claim: decision slots without evidence do not recover exp001's
+  gain: four sub-cell hypotheses per stride-8 cell (virtual stride-4 anchor
+  grid, stride-8 features; +4.3k params) gave +0.0030 mAP50 (0.6x floor),
+  per-unit F1 -0.0033 (CI [-0.0054,-0.0013], p=0.001, worse on every seed),
+  small recall@.25 down on every seed, and only 0.26x of exp001's small-class
+  AP50 gain (pre-registered reading: undetermined at the 0.25 boundary; the
+  point estimate sits with the evidence account). Extra hypotheses re-rank
+  small objects rather than find them. Combined with exp004 (emphasis is
+  zero-sum) the ledger says the P2 head's value is the stride-4 EVIDENCE
+  path. evidence: exp005 (+ exp001, exp004). status: active.
