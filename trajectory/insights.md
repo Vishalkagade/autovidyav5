@@ -74,10 +74,8 @@ file during Phase-0.**
   sits at baseline (-0.0015; per-unit p=0.68). The gain is the finer evidence
   path, not capacity. Same-sign per-unit effect on every seed (P10 vs
   baseline CI [+0.0077,+0.0122], vs control [+0.0076,+0.0121]).
-  evidence: exp001. status: active — PROVISIONAL until P11 resolves; if P11
-  passes this is the first direct support for the co-evolved-optimum reading
-  of COCO (a COCO-null mechanism that works where object scale breaks the
-  equilibrium).
+  evidence: exp001. status: stale — superseded by ins_006 (exp001 reclassified
+  Provisional Winner -> Winner at P11).
 - `ins_004` — claim: recall-at-conf-0.25 by scale is a threshold-bound
   discriminator that misses AP-visible gains: exp001 raised small-class AP50
   by ~+0.03 (pedestrian, people, motor) but small_recall@.25 by only
@@ -91,3 +89,15 @@ file during Phase-0.**
   report the mechanism-vs-control compute asymmetry in every P9 record
   (extends `ins_v5_zero_params_not_zero_cost`). evidence: exp001. status:
   active.
+- `ins_006` — claim: P2 evidence fusion is a VisDrone WINNER: sealed seeds
+  1000/2000 replicate at +0.0199/+0.0160 mAP50 (4.0x/3.2x floor; five-seed
+  range +0.011..+0.020, all positive), combined five-seed per-unit test vs
+  baseline CI [+0.0094,+0.0131] (p=7e-41), vs control (working seeds; control
+  margin 3.3x floor so it did not need to replicate) CI [+0.0076,+0.0121].
+  The same computation COCO-2k falsified at -0.022 (`ins_v5_p3_fusion_
+  locally_optimal`) is a certified gain where the median object is under one
+  stride-8 cell. This is direct support for the co-evolved-optimum reading of
+  YOLO26+COCO: the head's stride set is tuned to COCO's object sizes, not
+  optimal in general. Claim discipline: "a VisDrone Winner", not "a model
+  improvement" — the cross-dataset track (SKU-110K win + Pascal VOC
+  no-regression) is still open. evidence: exp001. status: active.

@@ -50,6 +50,22 @@
           "precision": 0.38905309946408023,
           "recall": 0.30522074134692934
         }
+      },
+      "1000": {
+        "primary": 0.2891891009594442,
+        "secondary": {
+          "mAP50_95": 0.16312083289475002,
+          "precision": 0.38615247743956227,
+          "recall": 0.3127244980839897
+        }
+      },
+      "2000": {
+        "primary": 0.284924410114341,
+        "secondary": {
+          "mAP50_95": 0.16071197925583453,
+          "precision": 0.3862457226316482,
+          "recall": 0.308762987365801
+        }
       }
     }
   },
@@ -380,9 +396,9 @@
   "attribution": {
     "type": "scientific",
     "subtype": "winner-verified",
-    "evidence": "seed deltas mAP50 {'42': 0.01870361883390753, '123': 0.011469080749495153, '7': 0.015249759572013022}; seed-avg mech-baseline +0.0151 (+3.0x floor); discriminator small_recall deltas {42: +0.009, 123: +0.008, 7: +0.013} -> FAIL (discriminator_failed); P9_CONTROL_GATE=OPEN 0.01514 floor 0.00497; P11 pending (sealed seeds 1000/2000; baseline legs were deferred at exp000 and run now alongside the mechanism). control_must_replicate=False (mech-control +0.0166 >= 2x floor). FPR/A-A audit point 1: the control vs baseline per-unit test is null (mean +0.0000, CI [-0.0020,+0.0021], p=0.68) \u2014 a placebo passing through the full chain did not produce a false positive. Discriminator FAILED on all seeds (small recall @conf .25: +0.009/+0.008/+0.013 vs the +0.05 bar) although small-class AP50 rose ~+0.03 (pedestrian, people, motor) \u2014 the recall@threshold instrument was mis-specified, not the mechanism; per the prereg the evidence-fusion ACCOUNT is not credited by this record even though the gate chain passes. Wall-clock: mechanism 243/241/243 min per seed vs control 81/85/80 \u2014 a 3x compute cost (stride-4 anchors x4; assigner OOM fallback on dense batches), far above the 1.5x forward-pass estimate: params 0.4%, compute 3x."
+    "evidence": "seed deltas mAP50 {'42': 0.01870361883390753, '123': 0.011469080749495153, '7': 0.015249759572013022}; seed-avg mech-baseline +0.0151 (+3.0x floor); discriminator small_recall deltas {42: +0.009, 123: +0.008, 7: +0.013} -> FAIL (discriminator_failed); P9_CONTROL_GATE=OPEN 0.01514 floor 0.00497; P11 pending (sealed seeds 1000/2000; baseline legs were deferred at exp000 and run now alongside the mechanism). control_must_replicate=False (mech-control +0.0166 >= 2x floor). FPR/A-A audit point 1: the control vs baseline per-unit test is null (mean +0.0000, CI [-0.0020,+0.0021], p=0.68) \u2014 a placebo passing through the full chain did not produce a false positive. Discriminator FAILED on all seeds (small recall @conf .25: +0.009/+0.008/+0.013 vs the +0.05 bar) although small-class AP50 rose ~+0.03 (pedestrian, people, motor) \u2014 the recall@threshold instrument was mis-specified, not the mechanism; per the prereg the evidence-fusion ACCOUNT is not credited by this record even though the gate chain passes. Wall-clock: mechanism 243/241/243 min per seed vs control 81/85/80 \u2014 a 3x compute cost (stride-4 anchors x4; assigner OOM fallback on dense batches), far above the 1.5x forward-pass estimate: params 0.4%, compute 3x.; P11 Winner: confirmation deltas {1000: 0.01990263418594046, 2000: 0.01604230719839511}, combined vs-baseline CI (0.00935901216833311, 0.013091363274007447), replicated: every confirmation seed favorable, both combined per-unit tests pass"
   },
-  "classification": "Provisional Winner",
+  "classification": "Winner",
   "discriminator": {
     "statement": "small_recall (per_scale_metric, IoU .5 conf .25) must rise by >= 0.05 absolute over the baseline seed-matched value on EVERY working seed. A mAP50 gain without this is not the stated mechanism.",
     "by_seed": {
@@ -404,6 +420,73 @@
     },
     "pass": false
   },
-  "cost_gpu_hours": 15.644214991728466,
-  "notes": "P11 pending (sealed seeds 1000/2000; baseline legs were deferred at exp000 and run now alongside the mechanism). control_must_replicate=False (mech-control +0.0166 >= 2x floor). FPR/A-A audit point 1: the control vs baseline per-unit test is null (mean +0.0000, CI [-0.0020,+0.0021], p=0.68) \u2014 a placebo passing through the full chain did not produce a false positive. Discriminator FAILED on all seeds (small recall @conf .25: +0.009/+0.008/+0.013 vs the +0.05 bar) although small-class AP50 rose ~+0.03 (pedestrian, people, motor) \u2014 the recall@threshold instrument was mis-specified, not the mechanism; per the prereg the evidence-fusion ACCOUNT is not credited by this record even though the gate chain passes. Wall-clock: mechanism 243/241/243 min per seed vs control 81/85/80 \u2014 a 3x compute cost (stride-4 anchors x4; assigner OOM fallback on dense batches), far above the 1.5x forward-pass estimate: params 0.4%, compute 3x."
+  "cost_gpu_hours": 23.729903394381207,
+  "notes": "P11 pending (sealed seeds 1000/2000; baseline legs were deferred at exp000 and run now alongside the mechanism). control_must_replicate=False (mech-control +0.0166 >= 2x floor). FPR/A-A audit point 1: the control vs baseline per-unit test is null (mean +0.0000, CI [-0.0020,+0.0021], p=0.68) \u2014 a placebo passing through the full chain did not produce a false positive. Discriminator FAILED on all seeds (small recall @conf .25: +0.009/+0.008/+0.013 vs the +0.05 bar) although small-class AP50 rose ~+0.03 (pedestrian, people, motor) \u2014 the recall@threshold instrument was mis-specified, not the mechanism; per the prereg the evidence-fusion ACCOUNT is not credited by this record even though the gate chain passes. Wall-clock: mechanism 243/241/243 min per seed vs control 81/85/80 \u2014 a 3x compute cost (stride-4 anchors x4; assigner OOM fallback on dense batches), far above the 1.5x forward-pass estimate: params 0.4%, compute 3x.",
+  "p11": {
+    "confirmation_seeds": [
+      1000,
+      2000
+    ],
+    "per_seed_confirmation_deltas_map50": {
+      "1000": 0.01990263418594046,
+      "2000": 0.01604230719839511
+    },
+    "per_seed_deltas": {
+      "1000": 0.01990263418594046,
+      "2000": 0.01604230719839511
+    },
+    "confirmation_seed_metrics": {
+      "1000": {
+        "baseline": 0.26928646677350376,
+        "mech": 0.2891891009594442,
+        "mech_small_recall": 0.23645428361081333
+      },
+      "2000": {
+        "baseline": 0.2688821029159459,
+        "mech": 0.284924410114341,
+        "mech_small_recall": 0.24178861578600674
+      }
+    },
+    "combined_vs_baseline": {
+      "n_units": 2158,
+      "mean_diff": 0.011217161098660692,
+      "median_diff": 0.011147966083924626,
+      "ci95": [
+        0.00935901216833311,
+        0.013091363274007447
+      ],
+      "wilcoxon_p": 6.739817425009324e-41,
+      "units_improved": 1373,
+      "per_seed_means": {
+        "7": 0.00887613669292152,
+        "42": 0.013212971836185583,
+        "123": 0.007713027435152454,
+        "1000": 0.014687874485362155,
+        "2000": 0.011595795043681743
+      },
+      "verdict": "pass",
+      "reason": "per-unit gate passed: CI excludes 0 in favorable direction"
+    },
+    "combined_vs_control": {
+      "n_units": 2158,
+      "mean_diff": 0.009891760561873611,
+      "median_diff": 0.009076860972455813,
+      "ci95": [
+        0.00763456002521722,
+        0.012145889433785285
+      ],
+      "wilcoxon_p": 2.0734850666994823e-23,
+      "units_improved": 1284,
+      "per_seed_means": {
+        "7": 0.007186392219699188,
+        "42": 0.011556871012771301,
+        "123": 0.010932018453150347
+      },
+      "verdict": "pass",
+      "reason": "per-unit gate passed: CI excludes 0 in favorable direction"
+    },
+    "control_replicated": false,
+    "verdict": "Winner",
+    "reason": "replicated: every confirmation seed favorable, both combined per-unit tests pass"
+  }
 }

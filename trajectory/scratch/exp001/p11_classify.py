@@ -18,7 +18,7 @@ def main():
     vb_all = paired_unit_test(mu, bu)                                   # all 5 seeds
     vc_all = paired_unit_test({s: mu[s] for s in W}, cu)               # control not replicated -> working seeds only (recorded)
     r = replication_check(per_seed_confirmation_deltas=conf_deltas, combined_vs_baseline=vb_all, combined_vs_control=vc_all, control_replicated=False)
-    out = {"confirmation_seeds": list(C), "per_seed_confirmation_deltas_map50": {str(s): v for s, v in conf_deltas.items()},
+    out = {"confirmation_seeds": list(C), "per_seed_confirmation_deltas_map50": {str(s): v for s, v in conf_deltas.items()}, "per_seed_deltas": {str(s): v for s, v in conf_deltas.items()},
            "confirmation_seed_metrics": {str(s): {"baseline": base[s]["primary"], "mech": mech[s]["primary"], "mech_small_recall": mech[s]["per_scale_recall"]["small_recall"]} for s in C},
            "combined_vs_baseline": t2d(vb_all), "combined_vs_control": t2d(vc_all), "control_replicated": False,
            "verdict": r.verdict, "reason": r.reason}
