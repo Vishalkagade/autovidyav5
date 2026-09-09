@@ -1,0 +1,153 @@
+{
+  "id": "exp002",
+  "phase": "phase-1",
+  "adapter_name": "yolo26n_visdrone_scratch",
+  "mechanism": {
+    "name": "Divisive normalization on one-to-one class logits",
+    "source_domain": "visual_neuroscience (Carandini & Heeger 2012, normalization as canonical neural computation)",
+    "kind": "site_wrap",
+    "family": "lateral-inhibition",
+    "site": "head.detect",
+    "params_count": 276
+  },
+  "cites_baseline_finding_ids": [
+    "fm_dense_scene_f1_collapse"
+  ],
+  "novelty_audit": {
+    "nearest_cv_analog": "NMS (post-hoc, non-differentiable; absent in the NMS-free YOLO26 head) and DETR-style query self-attention",
+    "mechanism_of_difference": "A learned local suppression FIELD applied to class logits: each cell's logit is reduced by n*log(sigma + surround-pooled sigmoid activity) with a 3x3 per-class surround kernel. No attention weights, no feature mixing, no ranking; differentiable and trained from step 0 inside the one2one branch. NMS ranks and deletes after the fact; attention mixes features. This divides energy locally before the decision. REGIME ARGUMENT: VisDrone eval averages 52.8 GT boxes per image (max 461) \u2014 7x COCO density; the one-to-one head still emits 8.7% duplicate predictions at conf .25 and per-image F1 falls from 0.55 to 0.28 with density (fm_dense_scene_f1_collapse). Lateral inhibition is the neural solution to exactly this: sharpening peaks under crowding.",
+    "regime_argument": "VisDrone eval averages 52.8 GT boxes per image (max 461) \u2014 7x COCO density; the one-to-one head still emits 8.7% duplicate predictions at conf .25 and per-image F1 falls from 0.55 to 0.28 with density (fm_dense_scene_f1_collapse). Lateral inhibition is the neural solution to exactly this: sharpening peaks under crowding.",
+    "nearest_cv_block": "NMS (post-hoc, non-differentiable; absent in the NMS-free YOLO26 head) and DETR-style query self-attention",
+    "structural_difference": "A learned local suppression FIELD applied to class logits: each cell's logit is reduced by n*log(sigma + surround-pooled sigmoid activity) with a 3x3 per-class surround kernel. No attention weights, no feature mixing, no ranking; differentiable and trained from step 0 inside the one2one branch. NMS ranks and deletes after the fact; attention mixes features. This divides energy locally before the decision."
+  },
+  "stages_run": [
+    "S2"
+  ],
+  "metrics_per_stage_per_seed": {
+    "S2": {
+      "42": {
+        "primary": 0.04527290209077939,
+        "secondary": {
+          "mAP50_95": 0.022970326396814462,
+          "precision": 0.38747498523300783,
+          "recall": 0.10072109882073747
+        }
+      }
+    }
+  },
+  "stage1_curve": {
+    "42": [
+      0.00093,
+      0.03865,
+      0.06449,
+      0.10401,
+      0.121,
+      0.13693,
+      0.13512,
+      0.14519,
+      0.16976,
+      0.17013,
+      0.17108,
+      0.19038,
+      0.19912,
+      0.20175,
+      0.20842,
+      0.2085,
+      0.21485,
+      0.2126,
+      0.22118,
+      0.21572,
+      0.22131,
+      0.22976,
+      0.22989,
+      0.23325,
+      0.22854,
+      0.23425,
+      0.2368,
+      0.24216,
+      0.24374,
+      0.24247,
+      0.2434,
+      0.24406,
+      0.24761,
+      0.14876,
+      0.15,
+      0.0,
+      0.00619,
+      0.00634,
+      0.05983,
+      0.05983,
+      0.05738,
+      0.05689,
+      0.05706,
+      0.05706,
+      0.05706,
+      0.05706,
+      0.05706,
+      0.05708,
+      0.05703,
+      0.05703,
+      0.05723,
+      0.05723,
+      0.05723,
+      0.05633,
+      0.05633,
+      0.05633,
+      0.05633,
+      0.05633,
+      0.05633,
+      0.05679,
+      0.05679,
+      0.05743,
+      0.05743,
+      0.05616,
+      0.05616,
+      0.05616,
+      0.05616,
+      0.05616,
+      0.05727,
+      0.05751,
+      0.05751,
+      0.05751,
+      0.05751,
+      0.05751,
+      0.05751,
+      0.05751,
+      0.05751,
+      0.05751,
+      0.05751,
+      0.05751
+    ]
+  },
+  "provenance": {
+    "git_commit": "ebf67fc1988c13791e3c04c13775bdd3c60dac1f",
+    "data_manifest_sha256": "89cbdc099b44847e8d69b5d3f507c39483be8ab742a81a3716c98dd4ae9794a2",
+    "ultralytics_commit": "b10fa7be231820cea668c52af45b25d07ff65968"
+  },
+  "created_at": "2026-09-09T10:12:21+00:00",
+  "boldness": "bold",
+  "attribution": {
+    "type": "operational",
+    "subtype": "misconfiguration",
+    "evidence": "seed deltas mAP50 {'42': -0.2244247473290638}; seed-avg mech-baseline -0.2244 (-45.2x floor); discriminators D1 dup_frac deltas {42: -0.0075} D2 dense-F1 deltas {42: -0.2695} -> FAIL (discriminator_failed); no gate line; OP-FAIL (misconfiguration): DivNorm surround kernel w was unconstrained in sign; it went negative (min -1.33 at P3), sigma + pooled became non-positive and log() produced NaN around epoch 33 under AMP; weights corrupted, val500 mAP50 fell from 0.243 (epoch 30, tracking baseline 0.241) to 0.0 then 0.057; final model emits ~426k predictions at conf .25 (84% pure FP). The mechanism AS DEFINED (non-negative pooled energy, Carandini & Heeger) never ran. Replayed as exp003 with w = softplus(w_raw) (non-negative), float32 normalisation under autocast, and a self-check that adversarial raw weights stay finite. P4 retry NOT consumed (Op-Fail replay per program.md). Regret: 0.9 GPU-h (one S2 leg + units). | NaN loss from epoch ~33 (train/val loss columns nan from epoch 40 in results.csv); learned w min -1.33 -> log argument <= 0."
+  },
+  "classification": "Op-Fail",
+  "discriminator": {
+    "statement": "duplicate fraction at conf .25 (predictions with IoU>=.5 to an already-matched GT, adapter matcher) must FALL vs the baseline on every working seed AND mean per-image F1 over frozen-eval units with >=100 GT boxes must RISE vs the baseline on every working seed (computed from per_unit JSONs + GT counts)",
+    "by_seed": {
+      "42": {
+        "D1_dup_frac_mech": 0.07676974944592616,
+        "D1_dup_frac_base": 0.08428078326162705,
+        "D1_delta": -0.007511033815700896,
+        "D2_dense_f1_mech": 0.11765933720928355,
+        "D2_dense_f1_base": 0.3871338789525347,
+        "D2_delta": -0.26947454174325114,
+        "delta": -0.007511033815700896
+      }
+    },
+    "pass": false
+  },
+  "cost_gpu_hours": 0.8908108729124069,
+  "notes": "OP-FAIL (misconfiguration): DivNorm surround kernel w was unconstrained in sign; it went negative (min -1.33 at P3), sigma + pooled became non-positive and log() produced NaN around epoch 33 under AMP; weights corrupted, val500 mAP50 fell from 0.243 (epoch 30, tracking baseline 0.241) to 0.0 then 0.057; final model emits ~426k predictions at conf .25 (84% pure FP). The mechanism AS DEFINED (non-negative pooled energy, Carandini & Heeger) never ran. Replayed as exp003 with w = softplus(w_raw) (non-negative), float32 normalisation under autocast, and a self-check that adversarial raw weights stay finite. P4 retry NOT consumed (Op-Fail replay per program.md). Regret: 0.9 GPU-h (one S2 leg + units).",
+  "regret": 0.891
+}

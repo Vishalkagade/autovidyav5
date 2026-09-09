@@ -5,7 +5,7 @@
   "hypothesis": "YOLO26+COCO is a co-evolved local optimum; mechanisms nulled on COCO-2k may work on tiny-object aerial imagery where that equilibrium does not hold",
   "eval_set": "FROZEN: val + test-dev = 2,158 images (user decision 2026-08-21)",
   "confirmation_strategy": "a VisDrone Winner must replicate on 2 more datasets before being claimed as a model improvement: one small-object set (SKU-110K; win required) and one normal-object set (Pascal VOC; no-regression bar). User decision 2026-09-07: three small-object wins would only prove a small-object helper.",
-  "phase": "Phase-1 \u2014 exp001 Winner",
+  "phase": "Phase-1 \u2014 exp001 Winner; exp002 Op-Fail (replay as exp003)",
   "eval_checkpoint": "last.pt (Tier-3, pre-registered 2026-09-07 \u2014 best.pt selection sees 23% of the frozen eval via val500)",
   "calibration": {
     "s1_epochs": 30,
@@ -56,6 +56,19 @@
       "small_recall_delta": 0.009661211784611804,
       "f1_zero_mass_delta": -0.002008032128514057,
       "classification": "Winner"
+    },
+    {
+      "exp": "exp002",
+      "family": "lateral-inhibition",
+      "site": "head.detect",
+      "params_added": 276,
+      "mAP50": 0.04527290209077939,
+      "mAP50_delta": -0.2244247473290638,
+      "mAP50_95_delta": -0.12473512092188696,
+      "small_recall": 0.125763661960916,
+      "small_recall_delta": -0.10327680405047596,
+      "f1_zero_mass_delta": 0.04494902687673771,
+      "classification": "Op-Fail"
     }
   ],
   "cwm": [
@@ -73,6 +86,13 @@
       "kind": "protocol",
       "regret_gpu_h": 0.0,
       "lesson": "P0 seal breached by the diagnosing session's initial repo read (cat of inherited_v5_scientific.md). Failure modes are data-computed, but priming cannot be excluded. Remedy available: blind re-derivation by a fresh session."
+    },
+    {
+      "exp": "exp002",
+      "date": "2026-09-09",
+      "kind": "operational",
+      "regret_gpu_h": 0.891,
+      "lesson": "A source-domain constraint (non-negative pooling weights) left unenforced in code let the optimizer drive log() to NaN. Encode every sign/range constraint of the source model as a parameterisation, and make the module self-check adversarial parameter values before the first GPU epoch. Tiny-overfit probes (200 iters) do not reach the divergence regime."
     }
   ]
 }

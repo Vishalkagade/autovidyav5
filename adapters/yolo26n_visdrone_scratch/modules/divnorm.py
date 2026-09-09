@@ -11,8 +11,12 @@ inference already apply:
 
     y_i = x_i - n * log( sigma + sum_j w_j * sigmoid(x_j) )
 
-- w: learned 3x3 depthwise (per-class) surround kernel, centre excluded
-  (init 1/8 on the 8 neighbours);
+- w: learned 3x3 depthwise (per-class) surround kernel, centre excluded,
+  NON-NEGATIVE by construction (softplus parameterisation, init 1/8 on the 8
+  neighbours) — pooled energy is a sum of non-negative terms in the source
+  model. exp002 ran an unconstrained w: it went negative, sigma + pooled hit
+  <= 0, log -> NaN at epoch ~33 under AMP (Op-Fail, misconfiguration).
+- the normalisation is computed in float32 regardless of autocast;
 - sigma > 0 (softplus-parameterised, init 1.0), n >= 0 (softplus, init 0.5).
 Trained from step 0. Params per scale = 9*nc + 2 (nc=10 -> 92).
 
@@ -31,12 +35,16 @@ class DivNorm(nn.Module):
     def __init__(self, nc: int, k: int = 3, sigma_init: float = 1.0, n_init: float = 0.5):
         super().__init__()
         self.nc, self.k = nc, k
-        w = torch.full((nc, 1, k, k), 1.0 / (k * k - 1))
-        w[:, :, k // 2, k // 2] = 0.0                      # surround only
-        self.w = nn.Parameter(w)
         inv = lambda v: torch.log(torch.expm1(torch.tensor(float(v))))   # softplus^-1
+        self.w_raw = nn.Parameter(torch.full((nc, 1, k, k), float(inv(1.0 / (k * k - 1)))))
+        mask = torch.ones(1, 1, k, k); mask[:, :, k // 2, k // 2] = 0.0   # surround only
+        self.register_buffer("mask", mask)
         self.sigma_raw = nn.Parameter(inv(sigma_init))
         self.n_raw = nn.Parameter(inv(n_init))
+
+    @property
+    def w(self) -> torch.Tensor:
+        return F.softplus(self.w_raw) * self.mask                # >= 0, centre excluded
 
     @property
     def sigma(self) -> torch.Tensor:
@@ -47,8 +55,10 @@ class DivNorm(nn.Module):
         return F.softplus(self.n_raw)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        pooled = F.conv2d(torch.sigmoid(x), self.w, padding=self.k // 2, groups=self.nc)
-        return x - self.n * torch.log(self.sigma + pooled)
+        with torch.autocast(device_type=x.device.type, enabled=False):
+            xf = x.float()
+            pooled = F.conv2d(torch.sigmoid(xf), self.w, padding=self.k // 2, groups=self.nc)
+            return (xf - self.n * torch.log(self.sigma + pooled)).to(x.dtype)
 
 
 def demo() -> None:
@@ -68,6 +78,9 @@ def demo() -> None:
     m(x).sum().backward()
     assert all(p.grad is not None and p.grad.abs().sum() > 0 for p in m.parameters())
     assert sum(p.numel() for p in m.parameters()) == 92
+    # exp002 failure mode cannot recur: adversarial raw weights still give a finite output
+    m.w_raw.data.fill_(-50.0); m.sigma_raw.data.fill_(-50.0)
+    assert torch.isfinite(m(x * 100)).all() and (m.w >= 0).all()
     print("divnorm demo OK")
 
 

@@ -39,7 +39,7 @@ def main():
     out = {"id": "exp002", "phase": "phase-1", "adapter_name": "yolo26n_visdrone_scratch",
            "mechanism": {"name": prereg["mechanism"]["name"], "source_domain": prereg["mechanism"]["source_domain"], "kind": "site_wrap",
                          "family": prereg["mechanism"]["family"], "site": prereg["mechanism"]["site"], "params_count": prereg["mechanism"]["params_added_measured"]},
-           "cites_baseline_finding_ids": prereg["cites_baseline_finding_ids"], "novelty_audit": {**prereg["novelty_audit"], "nearest_cv_analog": prereg["novelty_audit"]["nearest_cv_analog"], "mechanism_of_difference": prereg["novelty_audit"]["mechanism_of_difference"] + " REGIME ARGUMENT: " + prereg["novelty_audit"]["regime_argument"]},
+           "cites_baseline_finding_ids": prereg["cites_baseline_finding_ids"], "novelty_audit": {**prereg["novelty_audit"], "nearest_cv_analog": prereg["novelty_audit"]["nearest_cv_analog"], "nearest_cv_block": prereg["novelty_audit"]["nearest_cv_analog"], "structural_difference": prereg["novelty_audit"]["mechanism_of_difference"], "mechanism_of_difference": prereg["novelty_audit"]["mechanism_of_difference"] + " REGIME ARGUMENT: " + prereg["novelty_audit"]["regime_argument"]},
            "stages_run": ["S2"], "metrics_per_stage_per_seed": {"S2": {str(s): {"primary": m["primary"], "secondary": m["secondary"]} for s, m in mech.items()}},
            "stage1_curve": {str(s): m["curve_val500_map50"] for s, m in mech.items()},
            "provenance": {"git_commit": subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip(),

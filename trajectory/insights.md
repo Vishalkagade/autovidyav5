@@ -101,3 +101,10 @@ file during Phase-0.**
   optimal in general. Claim discipline: "a VisDrone Winner", not "a model
   improvement" — the cross-dataset track (SKU-110K win + Pascal VOC
   no-regression) is still open. evidence: exp001. status: active.
+- `ins_007` — claim: a log-domain normalisation with sign-unconstrained
+  surround weights diverges to NaN mid-training under AMP (exp002: epoch ~33
+  of 80, after tracking the baseline exactly to epoch 30). Source-domain
+  constraints (non-negative pooled energy) must be enforced by
+  parameterisation, and modules must self-check adversarial parameter values;
+  200-iteration overfit probes cannot catch mid-training divergence.
+  evidence: exp002. status: active (operational).
