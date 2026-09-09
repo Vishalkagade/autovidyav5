@@ -9,7 +9,7 @@ EXP=${1:?usage: pipeline_local.sh expNNN}
 PY=../.venv/bin/python; DRV=trajectory/scratch/$EXP/driver.py; ST=trajectory/scratch/$EXP/state; SEEDS="42 123 7"
 mkdir -p "$ST"; [ -f "$DRV" ] || { echo "FATAL: $DRV missing"; exit 1; }
 [ -f "trajectory/scratch/$EXP/prereg.json" ] || { echo "FATAL: prereg.json missing"; exit 1; }
-run() { echo "[$(date +%H:%M:%S)] START $*"; $PY $DRV "$@" > "$ST/log_$(echo "$*" | tr -c 'A-Za-z0-9\n' '_').txt" 2>&1; echo "[$(date +%H:%M:%S)] DONE  $*"; }
+run() { echo "[$(date +%H:%M:%S)] START $*"; if $PY $DRV "$@" > "$ST/log_$(echo "$*" | tr -c 'A-Za-z0-9\n' '_').txt" 2>&1; then echo "[$(date +%H:%M:%S)] DONE  $*"; else echo "[$(date +%H:%M:%S)] FAILED $* (see state log)"; exit 1; fi; }
 stage() { [ -f $ST/${1}_S2_seed$2.json ] || run stage --variant $1 --seed $2; }
 units() { [ -f $ST/per_unit_S2_${1}_seed$2.json ] && return; D=$($PY -c "import json;print(json.load(open('$ST/${1}_S2_seed$2.json'))['save_dir'])"); run units --variant $1 --seed $2 --weights "$D/weights/last.pt"; }
 echo "[$(date +%H:%M:%S)] ${EXP^^}_START"

@@ -96,7 +96,8 @@ def cmd_dryrun(_a):
     for v in ("mech", "control"):
         st = HT.attach(model, v, SCALE_JSON, WEIGHTS, 42); loss, items = model.criterion(preds, b)
         res[v] = {"loss_total": float(loss.sum()), "applied_batches": st["applied_batches"], "n_pos": st["n_pos"], "mean_w": st["sum_w"] / max(1, st["n_pos"]), "weight_area_corr": HT.corr_from_stats(st)}
-    ok = res["mech"]["applied_batches"] == 2 and  # E2ELoss calls the criterion twice per batch (one2many + one2one)
+    # E2ELoss calls the criterion twice per batch (one2many + one2one) -> applied_batches == 2
+    ok = res["mech"]["applied_batches"] == 2 and \
           res["mech"]["n_pos"] > 0 and abs(res["mech"]["mean_w"] - 1) < 1e-3 and (res["mech"]["weight_area_corr"] or 0) < 0 \
          and abs(res["control"]["weight_area_corr"] or 0) < abs(res["mech"]["weight_area_corr"] or 1)
     res["pass"] = ok; _w("dryrun.json", res); print("DRYRUN", "PASS" if ok else "FAIL", res); sys.exit(0 if ok else 1)
