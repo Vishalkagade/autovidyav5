@@ -1,0 +1,27 @@
+{
+  "exp": "exp008",
+  "written": "2026-09-10 — BEFORE any Stage-2 number for this mechanism exists",
+  "mechanism": {"name": "SPRT cascade: sequential evidence accumulation to stride 4 on the undecided band (q=0.25, B_hi=0.5)", "kind": "site_wrap", "site": "head.detect",
+                "module": "adapters.yolo26n_visdrone_scratch.modules.sprtcascade", "family": "sequential-evidence", "params_added_measured": 122716,
+                "q": 0.25, "b_hi": 0.5, "stage2": "4x4 P2 window + P3 cell -> Conv3x3(128->96, valid) -> Conv1x1(96->96) -> per-branch 1x1 heads; sub-cell cls logit = stage-1 logit + stage-2 residual",
+                "source_domain": "sequential_analysis (Wald 1945, sequential probability ratio test)"},
+  "cites_baseline_finding_ids": ["fm_small_gt_missed", "fm_dense_scene_f1_collapse"],
+  "novelty_audit": {
+    "nearest_cv_analog": "QueryDet (Yang et al. 2022): sparse high-resolution queries for small objects; cascade detectors (Viola & Jones)",
+    "mechanism_of_difference": "Selection is by the FIRST stage's own accumulated objectness (decided cells >= B_hi are excluded, the undecided band is sampled top-q), not by a separate small-object query head; the second stage ADDS its log-likelihood to the first (sequential accumulation) instead of replacing the prediction; and the second sample is the stride-4 evidence itself (P2 window) decided at stride-4 sub-anchors — the conjunction exp001/005/006 showed is necessary — computed only where the band says evidence is insufficient. The control (same network, random cells) tests exactly the selection rule.",
+    "regime_argument": "68% of VisDrone GT is under one stride-8 cell and 21.5% of GT centres share a stride-8 cell; the P2 head (exp001) fixes this at 3x wall-clock by resampling everywhere. A budgeted second sample on the undecided band is the SPRT answer to 'where is more evidence worth its cost'. On COCO the band is nearly empty of small objects, so the mechanism collapses to the baseline."
+  },
+  "discriminators": {
+    "D1": {"statement": "mean AP50 over small-dominated classes {pedestrian, people, bicycle, motor} must RISE vs the seed-matched baseline on every working seed"},
+    "D2_evidence_account": {"statement": "PRE-REGISTERED READING: seed-averaged small-class AP50 delta >= 0.5x exp001's means the sparse cascade recovers the P2 head's effect; < 0.25x means it does not."},
+    "D3_selection": {"statement": "The P9/P10 mechanism-vs-control comparison IS the selection-rule test: the random-cell placebo has identical params and compute; if the mechanism does not beat it per-unit, the SPRT band is not the mechanism."},
+    "on_fail": "classify from P10 as usual; record discriminator_failed; do not credit the sequential-evidence account"
+  },
+  "kill_bar_seed42_delta": -0.0050, "futility_two_seed_mean_delta": -0.0050, "p9_gate_delta": 0.0050,
+  "noise_floor_s2_map50": 0.004967, "baseline_s2_map50_by_seed": {"42": 0.26970, "123": 0.27327, "7": 0.26830},
+  "control": {"kind": "placebo selection (designed for this experiment): identical stage-2 network on a RANDOM q=0.25 of cells per image (seeded)", "params_added": 122716, "ratio": 1.0},
+  "pre_screen_gates": ["dryrun (surgery on both variants; params equal; strides [4,8,16,32]; live virtual anchors = q)", "gradcheck (P6' on stage-2 params, both branches)", "tinyprobe (ratio <= 1.5; surgery verified on trainer.model + EMA)"],
+  "expected_verdict_prior": "Provisional Winner if the conjunction transfers to a sparse second stage (>= 2x floor); Hold if the band misses the truly missed (low-objectness) small objects. Honest prior ~40% Winner-track.",
+  "budget_estimate_gpu_h": 24,
+  "cost_note": "The virtual stride-4 level has 25,600 anchors regardless of sparsity, so the assigner cost matches exp001 (~3x wall-clock per seed); stage-2 FLOPs are ~15% of the baseline."
+}

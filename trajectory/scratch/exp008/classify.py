@@ -1,0 +1,116 @@
+"""exp008 classification — runs the gate chain on the finished state files and
+writes trajectory/experiments/exp008.json (+ index/cost rows). Judgment text
+(insight claim, notes) is passed in via --notes; everything numeric is here."""
+from __future__ import annotations
+import argparse, csv, datetime, hashlib, json, os, subprocess, sys
+P = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")); sys.path.insert(0, P); os.chdir(P)
+from core.discipline.p10_stats_gate import paired_unit_test
+from core.discipline.p9_matched_control import attribution_check
+from core.discipline.p11_replication import control_must_replicate
+ST = "trajectory/scratch/exp008/state"; B = "trajectory/scratch/exp000/state"
+L = lambda p: json.load(open(p)); ex = os.path.exists
+SEEDS = (42, 123, 7)
+prereg = L("trajectory/scratch/exp008/prereg.json"); cal = L("trajectory/profiles/calibration.json"); floor = cal["noise_floor_s2_map50"]
+
+def units(path): return {int(x) if False else x: None for x in []} or L(path)["units"]
+def by_seed(fmt, seeds): return {s: [tuple(u) for u in L(fmt.format(s))["units"]] for s in seeds if ex(fmt.format(s))}
+
+def t2d(r):  # P10Result -> schema p10_test
+    return {"n_units": r.n_units, "mean_diff": r.mean_diff, "median_diff": r.median_diff, "ci95": list(r.ci95), "wilcoxon_p": r.wilcoxon_p,
+            "units_improved": r.units_improved, "per_seed_means": {str(k): v for k, v in r.per_seed_means.items()}, "verdict": "pass" if r.passed else ("direction-consistent-ns" if r.mean_diff > 0 else "unfavorable"), "reason": r.reason}
+
+def main():
+    ap = argparse.ArgumentParser(); ap.add_argument("--notes", default=""); ap.add_argument("--write", action="store_true"); a = ap.parse_args()
+    mech = {s: L(f"{ST}/mech_S2_seed{s}.json") for s in SEEDS if ex(f"{ST}/mech_S2_seed{s}.json")}
+    ctl = {s: L(f"{ST}/control_S2_seed{s}.json") for s in SEEDS if ex(f"{ST}/control_S2_seed{s}.json")}
+    base = {s: L(f"{B}/S2_seed{s}.json") for s in SEEDS}
+    bps = {s: L(f"{B}/per_scale_S2_seed{s}.json")["per_scale_recall"] for s in SEEDS}
+    screen = L(f"{ST}/screen_seed42.json") if ex(f"{ST}/screen_seed42.json") else None
+    log = open("trajectory/scratch/exp008/local.log").read()
+    out = {"id": "exp008", "phase": "phase-1", "adapter_name": "yolo26n_visdrone_scratch",
+           "mechanism": {"name": prereg["mechanism"]["name"], "source_domain": prereg["mechanism"]["source_domain"], "kind": "site_wrap",
+                         "family": prereg["mechanism"]["family"], "site": prereg["mechanism"]["site"], "params_count": prereg["mechanism"]["params_added_measured"]},
+           "cites_baseline_finding_ids": prereg["cites_baseline_finding_ids"], "novelty_audit": {**prereg["novelty_audit"], "nearest_cv_analog": prereg["novelty_audit"]["nearest_cv_analog"], "nearest_cv_block": prereg["novelty_audit"]["nearest_cv_analog"], "structural_difference": prereg["novelty_audit"]["mechanism_of_difference"], "mechanism_of_difference": prereg["novelty_audit"]["mechanism_of_difference"] + " REGIME ARGUMENT: " + prereg["novelty_audit"]["regime_argument"]},
+           "stages_run": ["S2"], "metrics_per_stage_per_seed": {"S2": {str(s): {"primary": m["primary"], "secondary": m["secondary"]} for s, m in mech.items()}},
+           "stage1_curve": {str(s): m["curve_val500_map50"] for s, m in mech.items()},
+           "provenance": {"git_commit": subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip(),
+                          "data_manifest_sha256": hashlib.sha256(open("visdrone_manifest.json", "rb").read()).hexdigest(),
+                          "ultralytics_commit": subprocess.run(["git", "-C", "../ultralytics_src", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()},
+           "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "boldness": "bold"}
+    # discriminator
+    bu0 = by_seed(B + "/per_unit_S2_seed{}.json", SEEDS); mu0 = by_seed(ST + "/per_unit_S2_mech_seed{}.json", SEEDS)
+    SMALL = ("pedestrian", "people", "bicycle", "motor"); LARGE = ("bus", "truck")
+    bpc = {s: {c["class_name"]: c["value"] for c in L(f"{B}/per_class_S2_seed{s}.json")["per_class_ap50"]} for s in SEEDS}
+    def grp(d, names): return sum(d[n] for n in names) / len(names)
+    disc = {}
+    for s, m in mech.items():
+        mpc = {c["class_name"]: c["value"] for c in m["per_class_ap50"]}
+        d_small = grp(mpc, SMALL) - grp(bpc[s], SMALL); d_large = grp(mpc, LARGE) - grp(bpc[s], LARGE)
+        disc[str(s)] = {"D1_small_class_ap50_delta": d_small, "D2_large_class_ap50_delta": d_large, "D1_pass": d_small > 0, "D2_pass": d_small > d_large, "delta": d_small}
+    disc_pass = all(v["D1_pass"] for k, v in disc.items() if k != "slot_account")
+    # D2 evidence-account reading vs exp001 (pre-registered thresholds 0.5x / 0.25x of exp001's small-class gain)
+    e1 = {s: L(f"trajectory/scratch/exp001/state/mech_S2_seed{s}.json") for s in SEEDS if ex(f"trajectory/scratch/exp001/state/mech_S2_seed{s}.json")}
+    e1_small = sum(grp({c["class_name"]: c["value"] for c in e1[s]["per_class_ap50"]}, SMALL) - grp(bpc[s], SMALL) for s in e1) / max(1, len(e1))
+    this_small = sum(v["D1_small_class_ap50_delta"] for k, v in disc.items() if k != "slot_account") / max(1, len(disc))
+    frac = this_small / e1_small if e1_small else None
+    slot_reading = "sparse cascade recovers the P2 effect" if (frac is not None and frac >= 0.5) else ("sparse cascade does NOT recover the P2 effect" if (frac is not None and frac < 0.25) else "undetermined")
+    disc["slot_account"] = {"exp001_small_class_delta_seedavg": e1_small, "exp008_small_class_delta_seedavg": this_small, "fraction": frac, "reading": slot_reading}
+    # deltas
+    mb = sum(mech[s]["primary"] for s in mech) / len(mech) - sum(base[s]["primary"] for s in mech) / len(mech)
+    per_seed_delta = {str(s): mech[s]["primary"] - base[s]["primary"] for s in mech}
+    p10 = {}
+    bu = by_seed(B + "/per_unit_S2_seed{}.json", SEEDS); mu = by_seed(ST + "/per_unit_S2_mech_seed{}.json", SEEDS); cu = by_seed(ST + "/per_unit_S2_control_seed{}.json", SEEDS)
+    if len(mu) >= 2: p10["vs_baseline"] = t2d(paired_unit_test({s: mu[s] for s in mu}, {s: bu[s] for s in mu}))
+    if len(cu) >= 2 and len(mu) >= 2:
+        p10["vs_control"] = t2d(paired_unit_test({s: mu[s] for s in cu}, {s: cu[s] for s in cu}))
+        p10["control_vs_baseline"] = t2d(paired_unit_test({s: cu[s] for s in cu}, {s: bu[s] for s in cu}))
+    if p10:
+        if "vs_control" in p10: out["p10"] = p10
+        else: out["p10_partial"] = {**p10, "note": "P9 control-deferral gate SHUT — control not run; schema requires vs_control inside p10, so the vs-baseline test is recorded here (program.md: omit p9 when the gate skips)"}
+    p9 = None
+    if ctl:
+        cb = sum(ctl[s]["primary"] for s in ctl) / len(ctl); bb = sum(base[s]["primary"] for s in ctl) / len(ctl); mm = sum(mech[s]["primary"] for s in ctl) / len(ctl)
+        r9 = attribution_check(mech_seedavg=mm, control_seedavg=cb, baseline_seedavg=bb, noise_floor_s2=floor)
+        p9 = {"control_run_ids": [ctl[s]["save_dir"] for s in ctl], "mech_minus_baseline": r9.mech_minus_baseline, "mech_minus_control": r9.mech_minus_control,
+              "control_minus_baseline": r9.control_minus_baseline, "attribution_pass": r9.passed, "reason": r9.reason,
+              "control_must_replicate_at_p11": control_must_replicate(r9.mech_minus_control, floor)}
+        out["p9"] = p9
+    # classification
+    if screen and screen["decision"] == "KILL": cls, sub = "Kill", "screened-out"
+    elif "FUTILITY_REJECT" in log: cls, sub = "Reject", "noise-floor"
+    elif len(mech) < 3: cls, sub = "Op-Fail", "crash"
+    else:
+        vb = p10.get("vs_baseline", {}); vc = p10.get("vs_control", {})
+        same_sign = all(v > 0 for v in vb.get("per_seed_means", {}).values()) if vb else False
+        if p9 and p9["attribution_pass"] and vb.get("verdict") == "pass" and vc.get("verdict") == "pass" and same_sign: cls, sub = "Provisional Winner", "winner-verified"
+        elif p9 and vb.get("verdict") == "pass" and vc.get("verdict") != "pass": cls, sub = "Hold", "capacity-explains-gain"
+        elif vb.get("mean_diff", 0) > 0 and all(v > 0 for v in vb.get("per_seed_means", {}).values()): cls, sub = "Hold", "direction-consistent-ns"
+        else: cls, sub = "Reject", "noise-floor"
+    gate = [l for l in log.splitlines() if "P9_CONTROL_GATE" in l]
+    evidence = (f"seed deltas mAP50 {per_seed_delta}; seed-avg mech-baseline {mb:+.4f} ({mb/floor:+.1f}x floor); discriminators D1 small-class AP50 deltas {{{', '.join(f'{k}: {v['D1_small_class_ap50_delta']:+.4f}' for k, v in disc.items() if k != 'slot_account')}}} vs large-class {{{', '.join(f'{k}: {v['D2_large_class_ap50_delta']:+.4f}' for k, v in disc.items() if k != 'slot_account')}}}; evidence-account reading: {disc.get('slot_account', {}).get('reading')} -> {'PASS' if disc_pass else 'FAIL (discriminator_failed)'}; "
+                + (gate[-1].split('] ')[1] if gate else "no gate line") + ("; " + a.notes if a.notes else ""))
+    out["attribution"] = {"type": "scientific" if cls != "Op-Fail" else "operational", "subtype": sub, "evidence": evidence}
+    out["classification"] = cls
+    out["discriminator"] = {"statement": prereg["discriminators"]["D1"]["statement"] + " | reading: " + prereg["discriminators"]["D2_evidence_account"]["statement"] + " | " + prereg["discriminators"]["D3_selection"]["statement"], "by_seed": disc, "pass": disc_pass}
+    gpu = sum(m["wall_min"] for m in mech.values()) / 60 + sum(c["wall_min"] for c in ctl.values()) / 60
+    out["cost_gpu_hours"] = gpu; out["notes"] = a.notes
+    import jsonschema; errs = [e.message for e in jsonschema.Draft202012Validator(L("core/schemas/experiment.schema.json")).iter_errors(out)]
+    print(json.dumps({k: out[k] for k in ("classification", "attribution", "discriminator", "p9", "p10") if k in out}, indent=1)); print("schema errors:", errs)
+    if a.write and not errs:
+        json.dump(out, open("trajectory/experiments/exp008.json", "w"), indent=2)
+        idx = L("trajectory/index.json")
+        ps = {s: m["per_scale_recall"]["small_recall"] for s, m in mech.items()}
+        idx["scoreboard"].append({"exp": "exp008", "family": prereg["mechanism"]["family"], "site": prereg["mechanism"]["site"], "params_added": prereg["mechanism"]["params_added_measured"],
+            "mAP50": sum(m["primary"] for m in mech.values()) / len(mech), "mAP50_delta": mb,
+            "mAP50_95_delta": sum(m["secondary"]["mAP50_95"] for m in mech.values()) / len(mech) - sum(base[s]["secondary"]["mAP50_95"] for s in mech) / len(mech),
+            "small_recall": sum(ps.values()) / len(ps), "small_recall_delta": sum(ps[s] - bps[s]["small_recall"] for s in ps) / len(ps),
+            "f1_zero_mass_delta": (sum(L(f"{ST}/per_unit_S2_mech_seed{s}.json")["f1_zero_frac"] for s in mu) / len(mu) - sum(L(f"{B}/per_unit_S2_seed{s}.json")["f1_zero_frac"] for s in mu) / len(mu)) if mu else None,
+            "classification": cls})
+        idx["phase"] = f"Phase-1 — exp008 {cls}"
+        json.dump(idx, open("trajectory/index.json", "w"), indent=2); open("trajectory/index.json", "a").write("\n")
+        with open("trajectory/cost_log.csv", "a") as f:
+            cum = float(open("trajectory/cost_log.csv").read().strip().splitlines()[-1].split(",")[-1])
+            for tag, d in (("exp008_mech", mech), ("exp008_control", ctl)):
+                for s, r in d.items(): cum += r["wall_min"] / 60; f.write(f"{s},{tag},{r['wall_min']/60:.3f},{cum:.3f}\n")
+        print("WROTE exp008.json, index.json, cost_log.csv")
+if __name__ == "__main__": main()
