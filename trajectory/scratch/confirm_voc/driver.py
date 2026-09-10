@@ -52,6 +52,19 @@ def cmd_probe(_):
     r = train("baseline", 200, 42, "voc_probe_baseline_seed42"); r["budgets"] = pick_budgets(r["curve_val500_map50"]); r["min_per_epoch"] = r["wall_min"] / 200; _w("probe.json", r); print("[voc] budgets", r["budgets"])
 def cmd_stage(a):
     ep = json.load(open(os.path.join(ST, "probe.json")))["budgets"]["s2_epochs"]; r = train(a.variant, ep, a.seed, f"voc_{a.variant}_S2_seed{a.seed}"); _w(f"{a.variant}_S2_seed{a.seed}.json", r)
+def cmd_finish(a):
+    """Recover a stage whose training completed but whose final eval crashed (e.g. the eval label-cache race): evaluate last.pt and write the state file."""
+    from ultralytics import YOLO
+    d = os.path.join(P, "runs_voc", f"voc_{a.variant}_S2_seed{a.seed}"); last = YOLO(os.path.join(d, "weights", "last.pt"))
+    st = [int(s) for s in last.model.model[-1].stride.tolist()]; assert st == STRIDES[a.variant], (a.variant, st)
+    rows = list(csv.DictReader(open(os.path.join(d, "results.csv")))); assert len(rows) == json.load(open(os.path.join(ST, "probe.json")))["budgets"]["s2_epochs"], len(rows)
+    tcol = next(c for c in rows[0] if c.strip() == "time"); wall = float(rows[-1][tcol]) / 60
+    f = last.val(data=DATA, imgsz=640, batch=32, plots=False, verbose=False, device=0)
+    _w(f"{a.variant}_S2_seed{a.seed}.json", {"variant": a.variant, "seed": a.seed, "epochs": len(rows), "save_dir": d, "tripwire_strides": st, "primary": float(f.box.map50),
+        "secondary": {"mAP50_95": float(f.box.map), "precision": float(f.box.mp), "recall": float(f.box.mr)},
+        "per_class_ap50": [{"class_name": last.names[int(i)], "value": float(ap)} for i, ap in zip(f.box.ap_class_index, f.box.ap50)],
+        "curve_val500_map50": _curve(d), "wall_min": wall, "recovered_by": "finish (final eval re-run after label-cache race; training complete)"})
+
 def cmd_units(a):
     u, ps = per_unit_and_scale(a.weights); v = [x for _, x in u]
     _w(f"per_unit_{a.variant}_seed{a.seed}.json", {"variant": a.variant, "seed": a.seed, "n_units": len(u), "mean_f1": sum(v) / len(v), "degenerate_frac": sum(1 for x in v if x in (0.0, 1.0)) / len(v), "per_scale_recall": ps, "units": u})
@@ -70,6 +83,7 @@ def cmd_assemble(_):
 def main():
     p = argparse.ArgumentParser(); sub = p.add_subparsers(dest="cmd", required=True); sub.add_parser("probe"); sub.add_parser("assemble")
     s = sub.add_parser("stage"); s.add_argument("--variant", choices=["baseline", "mech"], required=True); s.add_argument("--seed", type=int, required=True)
+    fi = sub.add_parser("finish"); fi.add_argument("--variant", choices=["baseline", "mech"], required=True); fi.add_argument("--seed", type=int, required=True)
     u = sub.add_parser("units"); u.add_argument("--variant", choices=["baseline", "mech"], required=True); u.add_argument("--seed", type=int, required=True); u.add_argument("--weights", required=True)
-    a = p.parse_args(); {"probe": cmd_probe, "stage": cmd_stage, "units": cmd_units, "assemble": cmd_assemble}[a.cmd](a)
+    a = p.parse_args(); {"probe": cmd_probe, "stage": cmd_stage, "units": cmd_units, "assemble": cmd_assemble, "finish": cmd_finish}[a.cmd](a)
 if __name__ == "__main__": main()
