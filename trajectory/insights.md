@@ -168,3 +168,20 @@ file during Phase-0.**
   VisDrone Winner". The cross-dataset track's SKU-110K leg is now moot for
   the model-improvement claim and is not run. evidence: confirm_voc (state/
   assembly.json), exp001, v5 exp007. status: active.
+- `ins_014` — claim: a budgeted second sample of stride-4 evidence on the
+  undecided band (SPRT cascade, q=0.25 of cells, +122.7k params, exp008)
+  recovers 0.61x of the P2 head's small-class AP50 gain (+0.014 seed-avg;
+  pre-registered reading: the sparse cascade DOES recover the evidence
+  effect) and raises mAP50 on every seed (+0.0061/+0.0018/+0.0059, seed-avg
+  +0.0046 = 0.92x floor) and mAP50-95 on every seed, yet LOWERS the
+  per-image F1 at the working threshold on every seed (-0.0071, CI
+  [-0.0094,-0.0047], p<1e-4) with recall@.25 down on every scale (medium
+  -0.017 on all seeds). Ranking improves, the operating point degrades —
+  the exp005 signature (ins_010) reappears with real stride-4 evidence
+  under the slots. Reading: sub-cell decisions split the one-to-one
+  positive mass across anchors, so scores land below the working
+  threshold even when the ranking is right; the failure is at the
+  decision/scoring stage, not the evidence stage. Reject by the per-unit
+  rule; the P9 gate never opened, so the selection rule (SPRT band vs
+  random cells) is untested. evidence: exp008 (+ exp005, exp001). status:
+  active.

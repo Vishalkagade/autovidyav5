@@ -5,7 +5,7 @@
   "hypothesis": "YOLO26+COCO is a co-evolved local optimum; mechanisms nulled on COCO-2k may work on tiny-object aerial imagery where that equilibrium does not hold",
   "eval_set": "FROZEN: val + test-dev = 2,158 images (user decision 2026-08-21)",
   "confirmation_strategy": "a VisDrone Winner must replicate on 2 more datasets before being claimed as a model improvement: one small-object set (SKU-110K; win required) and one normal-object set (Pascal VOC; no-regression bar). User decision 2026-09-07: three small-object wins would only prove a small-object helper.",
-  "phase": "Phase-1 continues by user order (cross-domain Winner sought). exp001 = VisDrone Winner, VOC no-regression FAILED (ins_013): small-object specialisation. exp008 (SPRT cascade) next.",
+  "phase": "Phase-1 \u2014 exp008 Reject",
   "eval_checkpoint": "last.pt (Tier-3, pre-registered 2026-09-07 \u2014 best.pt selection sees 23% of the frozen eval via val500)",
   "calibration": {
     "s1_epochs": 30,
@@ -147,6 +147,19 @@
       "small_recall_delta": 0.0038102372679952867,
       "f1_zero_mass_delta": 0.0018535681186283588,
       "classification": "Kill"
+    },
+    {
+      "exp": "exp008",
+      "family": "sequential-evidence",
+      "site": "head.detect",
+      "params_added": 122716,
+      "mAP50": 0.2750133464709498,
+      "mAP50_delta": 0.004590113571450283,
+      "mAP50_95_delta": 0.004482084302910305,
+      "small_recall": 0.22342198054841586,
+      "small_recall_delta": -0.003181655752597203,
+      "f1_zero_mass_delta": 0.0013901760889712678,
+      "classification": "Reject"
     }
   ],
   "cwm": [
