@@ -51,6 +51,7 @@ class Stage2(nn.Module):
 
 class SPRTDetect(Detect):
     # set by surgery: sprt (Stage2), q, b_hi, selection ('sprt'|'random'), gen (torch.Generator, CPU)
+    parent = "keep"; accumulate = "add"   # class-level defaults: checkpoints pickled before these knobs existed (exp008/exp009) must still load
     def _select(self, scores_l0: torch.Tensor, hw: int) -> torch.Tensor:
         """scores_l0: (B, nc, h*w) stage-1 one2one logits -> (B, K) selected cell indices."""
         B = scores_l0.shape[0]; K = max(1, int(self.q * hw))
