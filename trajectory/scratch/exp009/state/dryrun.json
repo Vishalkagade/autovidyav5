@@ -1,0 +1,38 @@
+{
+  "mech": {
+    "params_added": 122716,
+    "classes": [
+      "SPRTDetect",
+      "sprt",
+      "[4.0, 8.0, 16.0, 32.0]",
+      "True",
+      "mask"
+    ],
+    "n_anchors": 34000,
+    "live_virtual_frac": 0.25,
+    "out_shape": [
+      1,
+      300,
+      6
+    ]
+  },
+  "control": {
+    "params_added": 122716,
+    "classes": [
+      "SPRTDetect",
+      "random",
+      "[4.0, 8.0, 16.0, 32.0]",
+      "True",
+      "mask"
+    ],
+    "n_anchors": 34000,
+    "live_virtual_frac": 0.25,
+    "out_shape": [
+      1,
+      300,
+      6
+    ]
+  },
+  "ratio_control_over_mech": 1.0,
+  "pass": true
+}

@@ -178,10 +178,15 @@ file during Phase-0.**
   [-0.0094,-0.0047], p<1e-4) with recall@.25 down on every scale (medium
   -0.017 on all seeds). Ranking improves, the operating point degrades —
   the exp005 signature (ins_010) reappears with real stride-4 evidence
-  under the slots. Reading: sub-cell decisions split the one-to-one
-  positive mass across anchors, so scores land below the working
-  threshold even when the ranking is right; the failure is at the
-  decision/scoring stage, not the evidence stage. Reject by the per-unit
-  rule; the P9 gate never opened, so the selection rule (SPRT band vs
-  random cells) is untested. evidence: exp008 (+ exp005, exp001). status:
+  under the slots. Measured cause (state/dup_mech_S2.json, threshold
+  sweep): duplicate fraction 0.112/0.112/0.113 vs baseline 0.084/0.087/
+  0.087 while NON-duplicate false positives fell (0.137/0.126/0.132 vs
+  0.164/0.154/0.156) and per-image F1 sits below the baseline at every
+  threshold >= 0.15 including its peak — the selected cell's stride-8
+  parent keeps emitting a decision while its sub-anchor inherits the
+  parent logit, so one object gets two boxes. The evidence stage works
+  (fewer real FPs, higher AP); the decision stage double-counts. Reject
+  by the per-unit rule; the P9 gate never opened, so the selection rule
+  (SPRT band vs random cells) is untested. P4 retry = exp009 (parent
+  masked). evidence: exp008 (+ exp005, exp001). status:
   active.

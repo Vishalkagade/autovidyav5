@@ -95,7 +95,11 @@ class SPRTDetect(Detect):
             branches.insert(0, ("one2many", preds, p2, x[0], 0))
         for name, pr, pp2, pp3, br in branches:
             bx, sc = self._stage2_level(pp2, pp3, pr["scores"][..., :hw], sel, br)
-            out[name] = {"boxes": torch.cat([bx, pr["boxes"]], -1), "scores": torch.cat([sc, pr["scores"]], -1),
+            s1, b1 = pr["scores"], pr["boxes"]
+            if self.parent == "mask":   # exp009 (P4 retry of exp008): a cell that takes a second sample emits no stage-1 decision
+                s1 = s1.scatter(2, sel.unsqueeze(1).expand(-1, self.nc, -1), MASK_LOGIT)
+                b1 = b1.scatter(2, sel.unsqueeze(1).expand(-1, 4, -1), 0.0)
+            out[name] = {"boxes": torch.cat([bx, b1], -1), "scores": torch.cat([sc, s1], -1),
                          "feats": [p2.new_zeros(p2.shape[0], 1, 2 * h, 2 * w)] + list(pr["feats"])}
         self.last_sel = sel.detach()
         if self.training:
@@ -105,13 +109,13 @@ class SPRTDetect(Detect):
         return y if self.export else (y, out)
 
 
-def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5, seed: int = 0) -> int:
+def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5, seed: int = 0, parent: str = "keep") -> int:
     det = det_model.model[-1]; assert type(det).__name__ == "Detect", type(det).__name__
     before = sum(p.numel() for p in det.parameters())
     c_p2 = det_model.model[2].cv2.conv.out_channels if hasattr(det_model.model[2], "cv2") else 64
     c_p3 = det.cv3[0][0][0].conv.in_channels
     det.f = list(det.f) + [2]; det_model.save = sorted(set(det_model.save) | {2})
-    det.sprt = Stage2(c_p2, c_p3, det.nc); det.q, det.b_hi, det.selection = q, b_hi, selection
+    det.sprt = Stage2(c_p2, c_p3, det.nc); det.q, det.b_hi, det.selection, det.parent = q, b_hi, selection, parent
     det.gen = torch.Generator().manual_seed(seed)
     det.__class__ = SPRTDetect
     det.stride = torch.tensor([det.stride[0].item() / 2, *det.stride.tolist()], dtype=det.stride.dtype)   # [4, 8, 16, 32]
@@ -122,7 +126,7 @@ def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5,
 def surgery_present(det_model) -> dict:
     det = det_model.model[-1]
     return {"class": type(det).__name__, "selection": getattr(det, "selection", None), "q": getattr(det, "q", None),
-            "strides": [float(s) for s in det.stride.tolist()], "f": list(det.f), "save_has_2": 2 in det_model.save}
+            "strides": [float(s) for s in det.stride.tolist()], "f": list(det.f), "save_has_2": 2 in det_model.save, "parent": getattr(det, "parent", "keep")}
 
 
 def demo() -> None:
@@ -150,6 +154,13 @@ def demo() -> None:
     # random control has the same param count and different selection
     m2 = YOLO(A.MODEL_YAML).model; added2 = apply_surgery(m2, "random"); m2.train(); m2(x)
     assert added2 == added and not torch.equal(m.model[-1].last_sel, m2.model[-1].last_sel)
+    # parent="mask": the stride-8 parent of every selected cell emits nothing (logit -10, box 0); unselected parents untouched
+    m3 = YOLO(A.MODEL_YAML).model; added3 = apply_surgery(m3, "sprt", parent="mask"); m3.train(); p3 = m3(x); sel = m3.model[-1].last_sel
+    for br in ("one2many", "one2one"):
+        par_s = p3[br]["scores"][..., 25600:25600 + 6400]; par_b = p3[br]["boxes"][..., 25600:25600 + 6400]
+        gi = sel.unsqueeze(1); assert (par_s.gather(2, gi.expand(-1, 10, -1)) == MASK_LOGIT).all() and (par_b.gather(2, gi.expand(-1, 4, -1)) == 0).all()
+        assert ((par_s != MASK_LOGIT).all(1).float().mean() - 0.75).abs() < 0.01, "unselected parents must stay live"
+    assert added3 == added
     print(f"sprtcascade demo OK: +{added} params ({added / base:.2%}), live virtual anchors {live:.3f}, stage-2 grad {g:.3f}")
 
 

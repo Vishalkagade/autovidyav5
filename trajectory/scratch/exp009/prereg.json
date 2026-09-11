@@ -1,0 +1,67 @@
+{
+  "exp": "exp009",
+  "written": "2026-09-11 \u2014 BEFORE any Stage-2 number for this retry exists",
+  "retry_of": "exp008",
+  "retry_reason": "Single diagnosable flaw in exp008: a cell that takes the second sample STILL emits its stage-1 decision, and the sub-anchor logit inherits that parent logit (accumulation z1 + residual), so the parent and its sub-anchor both fire on the same object. Measured on the three matched seeds: duplicate fraction 0.112/0.112/0.113 vs baseline 0.084/0.087/0.087 (+32%), non-duplicate FP fraction DOWN (0.137/0.126/0.132 vs 0.164/0.154/0.156), per-image F1 below the baseline at every threshold >= 0.15 including its peak (0.4806 vs 0.4836 at conf .2), detections per image up at every threshold. Correction (one change): parent='mask' \u2014 the stride-8 anchor of every selected cell is masked (logit -10, box 0) in both branches, so a cell either decides at stage 1 (not selected) or defers entirely to stage 2, which is the SPRT rule (no decision is emitted while sampling continues); it also removes the one-to-one assignment conflict in which the parent was trained as a competing negative. Predicted direction: dup_frac returns to the baseline band (<= 0.095 every seed), precision and per-unit F1 recover to >= baseline, mAP50 / mAP50-95 gains retained.",
+  "mechanism": {
+    "name": "SPRT cascade, retry: undecided cells emit no stage-1 decision (parent masked; q=0.25, B_hi=0.5)",
+    "kind": "site_wrap",
+    "site": "head.detect",
+    "module": "adapters.yolo26n_visdrone_scratch.modules.sprtcascade",
+    "family": "sequential-evidence",
+    "params_added_measured": 122716,
+    "q": 0.25,
+    "b_hi": 0.5,
+    "stage2": "4x4 P2 window + P3 cell -> Conv3x3(128->96, valid) -> Conv1x1(96->96) -> per-branch 1x1 heads; sub-cell cls logit = stage-1 logit + stage-2 residual",
+    "source_domain": "sequential_analysis (Wald 1945, sequential probability ratio test)",
+    "parent": "mask"
+  },
+  "cites_baseline_finding_ids": [
+    "fm_small_gt_missed",
+    "fm_dense_scene_f1_collapse"
+  ],
+  "novelty_audit": {
+    "nearest_cv_analog": "QueryDet (Yang et al. 2022): sparse high-resolution queries for small objects; cascade detectors (Viola & Jones)",
+    "mechanism_of_difference": "Selection is by the FIRST stage's own accumulated objectness (decided cells >= B_hi are excluded, the undecided band is sampled top-q), not by a separate small-object query head; the second stage ADDS its log-likelihood to the first (sequential accumulation) instead of replacing the prediction; and the second sample is the stride-4 evidence itself (P2 window) decided at stride-4 sub-anchors \u2014 the conjunction exp001/005/006 showed is necessary \u2014 computed only where the band says evidence is insufficient. The control (same network, random cells) tests exactly the selection rule.",
+    "regime_argument": "68% of VisDrone GT is under one stride-8 cell and 21.5% of GT centres share a stride-8 cell; the P2 head (exp001) fixes this at 3x wall-clock by resampling everywhere. A budgeted second sample on the undecided band is the SPRT answer to 'where is more evidence worth its cost'. On COCO the band is nearly empty of small objects, so the mechanism collapses to the baseline."
+  },
+  "discriminators": {
+    "D1": {
+      "statement": "mean AP50 over small-dominated classes {pedestrian, people, bicycle, motor} must RISE vs the seed-matched baseline on every working seed"
+    },
+    "D2_evidence_account": {
+      "statement": "PRE-REGISTERED READING: seed-averaged small-class AP50 delta >= 0.5x exp001's means the sparse cascade recovers the P2 head's effect; < 0.25x means it does not."
+    },
+    "D3_selection": {
+      "statement": "The P9/P10 mechanism-vs-control comparison IS the selection-rule test: the random-cell placebo has identical params and compute; if the mechanism does not beat it per-unit, the SPRT band is not the mechanism."
+    },
+    "on_fail": "classify from P10 as usual; record discriminator_failed; do not credit the account whose discriminator failed",
+    "D4_duplicates": {
+      "statement": "dup_frac (per-image predictions at conf .25 matching an already-matched GT at IoU .5) must be <= 0.095 on EVERY working seed (baseline 0.084-0.087; exp008 0.112-0.113). This is the retry's directional prediction. If it fails, the flaw diagnosis was wrong: no second retry (P4 hard cap), next proposal.",
+      "bar": 0.095
+    }
+  },
+  "kill_bar_seed42_delta": -0.005,
+  "futility_two_seed_mean_delta": -0.005,
+  "p9_gate_delta": 0.005,
+  "noise_floor_s2_map50": 0.004967,
+  "baseline_s2_map50_by_seed": {
+    "42": 0.2697,
+    "123": 0.27327,
+    "7": 0.2683
+  },
+  "control": {
+    "kind": "placebo selection: identical stage-2 network and parent masking on a RANDOM q=0.25 of cells per image (seeded)",
+    "params_added": 122716,
+    "ratio": 1.0
+  },
+  "pre_screen_gates": [
+    "module self-check (parent masking exact on selected cells, unselected untouched)",
+    "dryrun",
+    "gradcheck (P6' on stage-2 params, both branches)",
+    "tinyprobe (ratio <= 1.5)"
+  ],
+  "expected_verdict_prior": "Provisional Winner if the duplicate account is right (exp008 reached +0.0046 mAP50 WITH duplicates dragging every thresholded metric; removing them should lift per-unit F1 and keep AP). Hold/Reject if masking the parent costs medium-object recall (the stage-2 box at stride 4 must now carry every object in a band cell). Honest prior ~45% Winner-track.",
+  "budget_estimate_gpu_h": 24,
+  "cost_note": "same anchors and compute as exp008 (~2.4 h per seed)."
+}
