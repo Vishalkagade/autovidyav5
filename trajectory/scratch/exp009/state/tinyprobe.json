@@ -1,0 +1,73 @@
+{
+  "control": {
+    "loss_first": 8.98071,
+    "loss_last": 8.50947,
+    "loss_every_20": [
+      8.98071,
+      9.4185,
+      9.41779,
+      9.48068,
+      9.26446,
+      9.10883,
+      9.17205,
+      8.7461,
+      8.4961,
+      8.66437
+    ],
+    "wall_min": 0.7131972471872966,
+    "tripwire": {
+      "trainer_model": [
+        "SPRTDetect",
+        "random",
+        "[4.0, 8.0, 16.0, 32.0]",
+        "True",
+        "mask"
+      ],
+      "ema": [
+        "SPRTDetect",
+        "random",
+        "[4.0, 8.0, 16.0, 32.0]",
+        "True",
+        "mask"
+      ],
+      "trainer_model_params": 2630416
+    }
+  },
+  "mech": {
+    "loss_first": 9.20603,
+    "loss_last": 9.037700000000001,
+    "loss_every_20": [
+      9.20603,
+      10.18408,
+      10.38688,
+      9.9803,
+      9.46136,
+      9.36429,
+      9.96796,
+      9.5929,
+      9.12055,
+      8.924199999999999
+    ],
+    "wall_min": 0.7657947182655335,
+    "tripwire": {
+      "trainer_model": [
+        "SPRTDetect",
+        "sprt",
+        "[4.0, 8.0, 16.0, 32.0]",
+        "True",
+        "mask"
+      ],
+      "ema": [
+        "SPRTDetect",
+        "sprt",
+        "[4.0, 8.0, 16.0, 32.0]",
+        "True",
+        "mask"
+      ],
+      "trainer_model_params": 2630416
+    }
+  },
+  "ratio_mech_over_control": 1.062075546420635,
+  "bar": 1.5,
+  "pass": true
+}

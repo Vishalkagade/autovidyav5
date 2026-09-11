@@ -190,3 +190,17 @@ file during Phase-0.**
   (SPRT band vs random cells) is untested. P4 retry = exp009 (parent
   masked). evidence: exp008 (+ exp005, exp001). status:
   active.
+- `ins_015` — claim: in a sparse stride-4 second stage, the duplicates come
+  from the ADDITIVE accumulation rule, not from the parent anchor: masking
+  the stride-8 parent of every selected cell (exp009, exp008's one P4
+  retry) RAISED the duplicate fraction (0.129/0.127/0.123 vs exp008's
+  0.112/0.112/0.113, baseline 0.085) while non-duplicate FPs stayed at the
+  exp008 level, so the four sub-cells of a selected cell co-fire on the
+  parent logit they all inherit (logit = z1 + residual; the negatives must
+  cancel a shared positive prior and do not). Removing the parent also
+  removed its real work: medium recall@.25 -0.042, small-class AP50 gain
+  0.61x -> 0.26x of the P2 head's, mAP50 -0.0011 seed-avg (Reject). The
+  stage-1 decision is needed in band cells; what must change is that
+  sub-cell decisions be their own logits (as in exp001's real stride-4
+  level, where per-unit F1 rose). evidence: exp009 (+ exp008, exp001).
+  status: active.
