@@ -90,7 +90,10 @@ class SPRTDetect(Detect):
         h, w = x[0].shape[2:]; hw = h * w
         sel = self._select(one2one["scores"][..., :hw].detach(), hw)
         out = {}
-        for name, pr, pp2, pp3, br in (("one2many", preds, p2, x[0], 0), ("one2one", one2one, p2.detach(), x_det[0], 1)):
+        branches = [("one2one", one2one, p2.detach(), x_det[0], 1)]
+        if preds:                                                    # one2many is dropped by Detect.fuse() at inference
+            branches.insert(0, ("one2many", preds, p2, x[0], 0))
+        for name, pr, pp2, pp3, br in branches:
             bx, sc = self._stage2_level(pp2, pp3, pr["scores"][..., :hw], sel, br)
             out[name] = {"boxes": torch.cat([bx, pr["boxes"]], -1), "scores": torch.cat([sc, pr["scores"]], -1),
                          "feats": [p2.new_zeros(p2.shape[0], 1, 2 * h, 2 * w)] + list(pr["feats"])}
@@ -137,6 +140,10 @@ def demo() -> None:
     m.eval()
     with torch.no_grad(): y = m(x)
     y = y[0] if isinstance(y, tuple) else y; assert y.shape == (2, 300, 6), y.shape
+    m.fuse()                                                        # inference path: one2many heads removed
+    with torch.no_grad(): yf = m(x)
+    yf = yf[0] if isinstance(yf, tuple) else yf; assert yf.shape == (2, 300, 6) and torch.isfinite(yf).all(), "fused path broken"   # BN folding + top-k reorder: shape/finiteness only
+    m = YOLO(A.MODEL_YAML).model; apply_surgery(m, "sprt")
     # grads reach stage 2
     m.train(); out = m(x); loss = out["one2one"]["scores"].abs().mean() + out["one2many"]["scores"].abs().mean() + out["one2many"]["boxes"].abs().mean()
     m.zero_grad(); loss.backward(); g = sum(float(q_.grad.norm()) for q_ in m.model[-1].sprt.parameters() if q_.grad is not None); assert g > 0
