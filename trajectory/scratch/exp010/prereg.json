@@ -1,0 +1,67 @@
+{
+  "exp": "exp010",
+  "written": "2026-09-11 \u2014 BEFORE any Stage-2 number for this mechanism exists",
+  "mechanism": {
+    "name": "Sparse second sample with independent stride-4 decision: SPRT band selection, stage-1 posterior as evidence, stage 2 decides (q=0.25, B_hi=0.5)",
+    "kind": "site_wrap",
+    "site": "head.detect",
+    "module": "adapters.yolo26n_visdrone_scratch.modules.sprtcascade",
+    "family": "sequential-evidence",
+    "params_added_measured": 131356,
+    "q": 0.25,
+    "b_hi": 0.5,
+    "stage2": "4x4 P2 window + P3 cell + stage-1 class posterior (detached, broadcast) -> Conv3x3(138->96, valid) -> Conv1x1(96->96) -> per-branch 1x1 heads; sub-cell logit = stage-2 output (own decision)",
+    "source_domain": "sequential_analysis (Wald 1945, sequential probability ratio test)",
+    "parent": "keep",
+    "accumulate": "feature"
+  },
+  "not_a_retry": "exp008's single P4 retry (exp009) is spent. exp010 enters from P8 as a new proposal: the decision rule changes (own logit vs additive accumulation), which exp009 measured to be the duplicate source (dup_frac 0.129 with the parent masked > 0.112 with it kept > 0.085 baseline: the four sub-cells of a selected cell fire together on the inherited logit).",
+  "cites_baseline_finding_ids": [
+    "fm_small_gt_missed",
+    "fm_dense_scene_f1_collapse"
+  ],
+  "novelty_audit": {
+    "nearest_cv_analog": "QueryDet (Yang et al. 2022): sparse high-resolution queries for small objects, selected by a separate small-object query head with its own loss; cascade detectors (Viola-Jones)",
+    "mechanism_of_difference": "Selection is by the FIRST stage's own posterior band (decided cells >= B_hi excluded, top-q of the undecided), not a separate query head; the stage-1 posterior is passed to stage 2 as evidence (a feature) so the second decision is conditioned on the first sample; both stages share one one-to-one assignment (a single decision per object, no query loss). Versus exp008/exp009 (same family): the sub-cell logit is stage 2's OWN decision rather than parent logit + residual \u2014 the additive rule made the four sub-cells of a cell co-fire (measured duplicates), and masking the parent (exp009) removed the parent's real contribution (medium recall -0.042) without removing the duplicates.",
+    "regime_argument": "68% of VisDrone GT is under one stride-8 cell and 21.5% of GT centres share a stride-8 cell; the P2 head (exp001) fixes this at 3x wall-clock by resampling everywhere. A budgeted second sample on the undecided band is the SPRT answer to 'where is more evidence worth its cost'. On COCO the band is nearly empty of small objects, so the mechanism collapses to the baseline."
+  },
+  "discriminators": {
+    "D1": {
+      "statement": "mean AP50 over small-dominated classes {pedestrian, people, bicycle, motor} must RISE vs the seed-matched baseline on every working seed"
+    },
+    "D2_evidence_account": {
+      "statement": "PRE-REGISTERED READING: seed-averaged small-class AP50 delta >= 0.5x exp001's means the sparse cascade recovers the P2 head's effect; < 0.25x means it does not."
+    },
+    "D3_selection": {
+      "statement": "The P9/P10 mechanism-vs-control comparison IS the selection-rule test: the random-cell placebo has identical params and compute; if the mechanism does not beat it per-unit, the SPRT band is not the mechanism."
+    },
+    "D4_duplicates": {
+      "statement": "dup_frac (conf .25, IoU .5) <= 0.095 on EVERY working seed (baseline 0.084-0.087; exp008 0.112-0.113; exp009 0.129). If duplicates persist with independent logits, sparse sub-cell decisions duplicate for a reason not yet measured and the class-site pair is saturated (P2: third failure).",
+      "bar": 0.095
+    },
+    "on_fail": "classify from P10 as usual; record discriminator_failed; do not credit the account whose discriminator failed"
+  },
+  "kill_bar_seed42_delta": -0.005,
+  "futility_two_seed_mean_delta": -0.005,
+  "p9_gate_delta": 0.005,
+  "noise_floor_s2_map50": 0.004967,
+  "baseline_s2_map50_by_seed": {
+    "42": 0.2697,
+    "123": 0.27327,
+    "7": 0.2683
+  },
+  "control": {
+    "kind": "placebo selection: identical stage-2 network (own logits, stage-1 posterior feature) on a RANDOM q=0.25 of cells per image (seeded)",
+    "params_added": 131356,
+    "ratio": 1.0
+  },
+  "pre_screen_gates": [
+    "module self-check (own logits near zero at init; no gradient from sub-cell loss into the stage-1 class head)",
+    "dryrun",
+    "gradcheck",
+    "tinyprobe (ratio <= 1.5)"
+  ],
+  "expected_verdict_prior": "Provisional Winner if the duplicate account is right: exp008 reached +0.0046 mAP50 / small-class AP50 +0.014 with duplicates dragging every thresholded metric; independent sub-cell logits mirror exp001's decision structure (each stride-4 anchor its own logit; per-unit F1 rose there). Reject if the sparse second stage cannot learn selective sub-cell logits without the parent prior. Honest prior ~40% Winner-track. Third consecutive sequential-evidence experiment: a failure saturates the (sequential-evidence, head.detect) pair (P2) and forces rotation.",
+  "budget_estimate_gpu_h": 24,
+  "cost_note": "same anchors and compute as exp008 (~2.4 h per seed)."
+}

@@ -35,10 +35,10 @@ MASK_LOGIT = -10.0
 
 class Stage2(nn.Module):
     """Shared trunk (4x4 window -> 2x2) + per-branch heads (one2many, one2one)."""
-    def __init__(self, c_p2: int, c_p3: int, nc: int, hidden: int = 96):
+    def __init__(self, c_p2: int, c_p3: int, nc: int, hidden: int = 96, c_extra: int = 0):
         super().__init__()
         self.nc = nc
-        self.trunk = nn.Sequential(nn.Conv2d(c_p2 + c_p3, hidden, 3), nn.SiLU(), nn.Conv2d(hidden, hidden, 1), nn.SiLU())   # valid 3x3: 4x4 -> 2x2
+        self.trunk = nn.Sequential(nn.Conv2d(c_p2 + c_p3 + c_extra, hidden, 3), nn.SiLU(), nn.Conv2d(hidden, hidden, 1), nn.SiLU())   # valid 3x3: 4x4 -> 2x2
         self.box = nn.ModuleList(nn.Conv2d(hidden, 4, 1) for _ in range(2))
         self.cls = nn.ModuleList(nn.Conv2d(hidden, nc, 1) for _ in range(2))
         for b in self.box: nn.init.constant_(b.bias, 1.0)
@@ -68,9 +68,15 @@ class SPRTDetect(Detect):
         win = win.transpose(1, 2).reshape(B * K, C2, 4, 4)
         cell = p3.flatten(2).gather(2, sel.unsqueeze(1).expand(-1, p3.shape[1], -1))   # (B, C3, K)
         cell = cell.transpose(1, 2).reshape(B * K, -1, 1, 1).expand(-1, -1, 4, 4)
-        box, dcls = self.sprt(torch.cat([win, cell], 1), branch)              # (BK,4,2,2), (BK,nc,2,2)
         z1 = scores_l0.gather(2, sel.unsqueeze(1).expand(-1, nc, -1))         # (B, nc, K) stage-1 logit
-        cls = dcls.view(B, K, nc, 2, 2) + z1.transpose(1, 2).reshape(B, K, nc, 1, 1)   # accumulation
+        if self.accumulate == "feature":   # exp010: stage 1 enters as a (detached) feature; the sub-cell logit is stage 2's own decision
+            feat = [win, cell, z1.detach().transpose(1, 2).reshape(B * K, nc, 1, 1).expand(-1, -1, 4, 4)]
+        else:
+            feat = [win, cell]
+        box, dcls = self.sprt(torch.cat(feat, 1), branch)                     # (BK,4,2,2), (BK,nc,2,2)
+        cls = dcls.view(B, K, nc, 2, 2)
+        if self.accumulate == "add":       # exp008/exp009: additive accumulation (parent logit + residual)
+            cls = cls + z1.transpose(1, 2).reshape(B, K, nc, 1, 1)
         box = box.view(B, K, 4, 2, 2)
         # scatter into the virtual grid (2h x 2w): sub-cell (di,dj) of cell (i,j) -> row 2i+di, col 2j+dj
         i, j = sel // w, sel % w                                              # (B, K)
@@ -109,13 +115,15 @@ class SPRTDetect(Detect):
         return y if self.export else (y, out)
 
 
-def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5, seed: int = 0, parent: str = "keep") -> int:
+def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5, seed: int = 0, parent: str = "keep", accumulate: str = "add") -> int:
     det = det_model.model[-1]; assert type(det).__name__ == "Detect", type(det).__name__
     before = sum(p.numel() for p in det.parameters())
     c_p2 = det_model.model[2].cv2.conv.out_channels if hasattr(det_model.model[2], "cv2") else 64
     c_p3 = det.cv3[0][0][0].conv.in_channels
     det.f = list(det.f) + [2]; det_model.save = sorted(set(det_model.save) | {2})
-    det.sprt = Stage2(c_p2, c_p3, det.nc); det.q, det.b_hi, det.selection, det.parent = q, b_hi, selection, parent
+    assert accumulate in ("add", "feature") and parent in ("keep", "mask"), (accumulate, parent)
+    det.sprt = Stage2(c_p2, c_p3, det.nc, c_extra=det.nc if accumulate == "feature" else 0)
+    det.q, det.b_hi, det.selection, det.parent, det.accumulate = q, b_hi, selection, parent, accumulate
     det.gen = torch.Generator().manual_seed(seed)
     det.__class__ = SPRTDetect
     det.stride = torch.tensor([det.stride[0].item() / 2, *det.stride.tolist()], dtype=det.stride.dtype)   # [4, 8, 16, 32]
@@ -126,7 +134,7 @@ def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5,
 def surgery_present(det_model) -> dict:
     det = det_model.model[-1]
     return {"class": type(det).__name__, "selection": getattr(det, "selection", None), "q": getattr(det, "q", None),
-            "strides": [float(s) for s in det.stride.tolist()], "f": list(det.f), "save_has_2": 2 in det_model.save, "parent": getattr(det, "parent", "keep")}
+            "strides": [float(s) for s in det.stride.tolist()], "f": list(det.f), "save_has_2": 2 in det_model.save, "parent": getattr(det, "parent", "keep"), "accumulate": getattr(det, "accumulate", "add")}
 
 
 def demo() -> None:
@@ -161,6 +169,14 @@ def demo() -> None:
         gi = sel.unsqueeze(1); assert (par_s.gather(2, gi.expand(-1, 10, -1)) == MASK_LOGIT).all() and (par_b.gather(2, gi.expand(-1, 4, -1)) == 0).all()
         assert ((par_s != MASK_LOGIT).all(1).float().mean() - 0.75).abs() < 0.01, "unselected parents must stay live"
     assert added3 == added
+    # accumulate="feature": stage-2 logits are its own (no additive parent term); z1 is an input, gradient must NOT reach stage 1 through it
+    m4 = YOLO(A.MODEL_YAML).model; added4 = apply_surgery(m4, "sprt", accumulate="feature"); m4.train(); p4 = m4(x)
+    assert added4 == added + 10 * 9 * 96, added4                              # +nc input channels on the shared 3x3 trunk conv
+    sub = p4["one2one"]["scores"][..., :25600]; lv = (p4["one2one"]["boxes"][..., :25600] != 0).any(1)
+    assert sub[lv.unsqueeze(1).expand(-1, 10, -1)].abs().max() < 5, "stage-2 own logits start near zero (no parent term)"
+    m4.zero_grad(); sub[lv.unsqueeze(1).expand(-1, 10, -1)].sum().backward()
+    o2o_cls_grad = sum(float(q_.grad.abs().sum()) for q_ in m4.model[-1].one2one_cv3.parameters() if q_.grad is not None) if hasattr(m4.model[-1], "one2one_cv3") else 0.0
+    assert o2o_cls_grad == 0.0, "sub-cell loss must not reach the stage-1 class head via the detached z1 feature"
     print(f"sprtcascade demo OK: +{added} params ({added / base:.2%}), live virtual anchors {live:.3f}, stage-2 grad {g:.3f}")
 
 
