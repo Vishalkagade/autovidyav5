@@ -157,3 +157,14 @@ file during Phase-0.**
   objective. Objective-side proposals citing fm_sibling_class_confusion are
   not worth GPU without new evidence. evidence: exp007 (+ exp001). status:
   active.
+- `ins_013` — claim: the P2 evidence-fusion head (exp001's VisDrone Winner)
+  REGRESSES on Pascal VOC (normal-object data, from scratch, same protocol):
+  seed-avg mAP50 -0.0063 (VOC floor 0.0085; seeds +0.005/-0.017/-0.007),
+  per-image F1 -0.0050 with bootstrap CI [-0.009, -0.001] (Wilcoxon
+  p=0.056), small-object recall down on every seed (0.357 -> 0.332 avg).
+  The pre-registered no-regression bar FAILED on its per-unit clause.
+  Together with v5's COCO-2k result (-0.022) this places the mechanism as a
+  small-object specialisation, not a model improvement: the claim stays "a
+  VisDrone Winner". The cross-dataset track's SKU-110K leg is now moot for
+  the model-improvement claim and is not run. evidence: confirm_voc (state/
+  assembly.json), exp001, v5 exp007. status: active.

@@ -5,7 +5,7 @@
   "hypothesis": "YOLO26+COCO is a co-evolved local optimum; mechanisms nulled on COCO-2k may work on tiny-object aerial imagery where that equilibrium does not hold",
   "eval_set": "FROZEN: val + test-dev = 2,158 images (user decision 2026-08-21)",
   "confirmation_strategy": "a VisDrone Winner must replicate on 2 more datasets before being claimed as a model improvement: one small-object set (SKU-110K; win required) and one normal-object set (Pascal VOC; no-regression bar). User decision 2026-09-07: three small-object wins would only prove a small-object helper.",
-  "phase": "Phase-1 exit criterion MET: Winner delivered (exp001). Six further mechanisms null (exp003-007); decomposition closed (ins_011). Cross-dataset confirmation track next (VOC no-regression, SKU-110K win).",
+  "phase": "Phase-1 continues by user order (cross-domain Winner sought). exp001 = VisDrone Winner, VOC no-regression FAILED (ins_013): small-object specialisation. exp008 (SPRT cascade) next.",
   "eval_checkpoint": "last.pt (Tier-3, pre-registered 2026-09-07 \u2014 best.pt selection sees 23% of the frozen eval via val500)",
   "calibration": {
     "s1_epochs": 30,
@@ -179,6 +179,29 @@
       "regret_gpu_h": 0.0,
       "wall_delay_h": 1.2,
       "lesson": "A sed edit inserted a comment before a line continuation; the pipeline's first step failed silently (error only in the per-step log) and the GPU idled 70 min. Fix: pipeline prints FAILED on any step failure and monitors match it; never sed-edit multi-line expressions \u2014 use a parser-checked edit."
+    },
+    {
+      "exp": "exp008",
+      "date": "2026-09-11",
+      "kind": "operational",
+      "regret_gpu_h": 0.0,
+      "wall_delay_h": 21.5,
+      "lesson": "exp008's tinyprobe gate failed at 13:31 on a fused-model code path (Detect.fuse drops the one2many heads; my forward assumed both branches) and the launcher correctly did not start the pipeline \u2014 but the monitors did not surface the GATE_FAIL line and the GPU idled 21.5 h. Gate results must be checked actively at the expected time, not only via monitor events."
     }
-  ]
+  ],
+  "confirmation_track": {
+    "voc": {
+      "verdict": "NO_REGRESSION FAIL (per-unit clause)",
+      "seedavg_delta_map50": -0.0063,
+      "voc_floor": 0.0085,
+      "per_unit_ci95": [
+        -0.009,
+        -0.001
+      ],
+      "wilcoxon_p": 0.0558,
+      "record": "trajectory/scratch/confirm_voc/state/assembly.json",
+      "gpu_h": 20.4
+    },
+    "sku110k": "not run \u2014 moot after VOC fail"
+  }
 }

@@ -31,3 +31,10 @@ seed,stage,gpu_hours,cumulative
 123,exp006_mech,0.747,45.915
 7,exp006_mech,0.747,46.662
 42,exp007_mech,0.737,47.399
+42,voc_baseline,2.308,49.707
+123,voc_baseline,2.301,52.008
+7,voc_baseline,1.252,53.260
+42,voc_mech,2.098,55.359
+123,voc_mech,2.090,57.449
+7,voc_mech,2.093,59.541
+42,voc_probe,3.117,62.658
