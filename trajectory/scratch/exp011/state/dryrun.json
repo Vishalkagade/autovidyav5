@@ -1,0 +1,36 @@
+{
+  "mech": {
+    "params_added_vs_baseline": 10652,
+    "classes": [
+      "BandGatedDetect",
+      "band",
+      "[4.0, 8.0, 16.0, 32.0]",
+      "4"
+    ],
+    "n_anchors": 34000,
+    "live_stride4_frac": 0.25,
+    "out_shape": [
+      1,
+      300,
+      6
+    ]
+  },
+  "control": {
+    "params_added_vs_baseline": 10652,
+    "classes": [
+      "BandGatedDetect",
+      "random",
+      "[4.0, 8.0, 16.0, 32.0]",
+      "4"
+    ],
+    "n_anchors": 34000,
+    "live_stride4_frac": 0.25,
+    "out_shape": [
+      1,
+      300,
+      6
+    ]
+  },
+  "ratio_control_over_mech": 1.0,
+  "pass": true
+}

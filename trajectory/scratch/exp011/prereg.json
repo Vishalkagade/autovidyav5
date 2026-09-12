@@ -1,0 +1,69 @@
+{
+  "exp": "exp011",
+  "written": "2026-09-12 \u2014 BEFORE any Stage-2 number for this mechanism exists (exp010 seeds 123/7 still training)",
+  "mechanism": {
+    "name": "Band-gated stride-4 decision level: SPRT band from the stride-8 posterior gates the P2 level of the yolo26-p2 topology (q=0.25, B_hi=0.5)",
+    "kind": "site_wrap",
+    "site": "head.detect (4-level, yolo26-p2 topology)",
+    "module": "adapters.yolo26n_visdrone_scratch.modules.bandgate",
+    "family": "sequential-evidence",
+    "params_added_measured": 10652,
+    "q": 0.25,
+    "b_hi": 0.5,
+    "topology": "configs/yolo26n-p2-visdrone.yaml (exp001's Winner) for BOTH variants; surgery adds 0 params",
+    "source_domain": "sequential_analysis (Wald 1945, sequential probability ratio test)"
+  },
+  "cites_baseline_finding_ids": [
+    "fm_small_gt_missed",
+    "fm_dense_scene_f1_collapse"
+  ],
+  "novelty_audit": {
+    "nearest_cv_analog": "QueryDet (Yang et al. 2022): sparse high-resolution head computed where a separately-trained small-object query head fires; cascade detectors (Viola-Jones)",
+    "mechanism_of_difference": "The gate is the FIRST stage's own posterior band (cells with one-to-one objectness >= B_hi are decided and take no second sample; the top-q of the undecided are re-decided at stride 4): no query head, no query loss, one shared one-to-one assignment. Versus exp001 (same topology): the stride-4 level may only decide inside the band, so on data where stage 1 decides almost everything (normal-object sets) the level is mostly masked \u2014 the pre-registered route to exp001's cross-dataset regression (ins_013). Versus exp008/exp010 (same family): the second decision is made by the P2 head's own level (exp001 capacity) instead of a thin cascade trunk; exp010 measured the band informative (85% of small GT centres at q=0.25 vs 25% random) while its thin second stage could not decide well (ins_016).",
+    "regime_argument": "68% of VisDrone GT is under one stride-8 cell and 21.5% of GT centres share a stride-8 cell; the P2 head (exp001) fixes this at 3x wall-clock by resampling everywhere. A budgeted second sample on the undecided band is the SPRT answer to 'where is more evidence worth its cost'. On COCO the band is nearly empty of small objects, so the mechanism collapses to the baseline."
+  },
+  "discriminators": {
+    "D1": {
+      "statement": "mean AP50 over small-dominated classes {pedestrian, people, bicycle, motor} must RISE vs the seed-matched baseline on every working seed"
+    },
+    "D2_evidence_account": {
+      "statement": "PRE-REGISTERED READING: seed-averaged small-class AP50 delta >= 0.5x exp001's means band gating RETAINS the P2 level's effect; < 0.25x means the band starves it."
+    },
+    "D3_selection": {
+      "statement": "The P9/P10 mechanism-vs-control comparison IS the selection-rule test: the random-gated control has identical topology, params and compute; if band gating does not beat random gating per-unit, the band is not the mechanism."
+    },
+    "D4_duplicates": {
+      "statement": "dup_frac (conf .25, IoU .5) <= 0.105 on every working seed (exp001, the ungated level, measures 0.098; baseline 0.085).",
+      "bar": 0.105
+    },
+    "D5_coverage": {
+      "statement": "Fraction of small GT centres (input-scale side < 32 px) inside selected cells >= 0.60 on every working seed (random gating expects q = 0.25; exp010 measured 0.85). Below it the band did not select the small objects and D3 cannot be credited to selection.",
+      "bar": 0.6
+    },
+    "on_fail": "classify from P10 as usual; record discriminator_failed; do not credit the account whose discriminator failed"
+  },
+  "kill_bar_seed42_delta": -0.005,
+  "futility_two_seed_mean_delta": -0.005,
+  "p9_gate_delta": 0.005,
+  "noise_floor_s2_map50": 0.004967,
+  "baseline_s2_map50_by_seed": {
+    "42": 0.2697,
+    "123": 0.27327,
+    "7": 0.2683
+  },
+  "control": {
+    "kind": "placebo gating (designed): the same yolo26-p2 topology with the stride-4 level gated on a RANDOM q=0.25 of stride-8 cells per image (seeded)",
+    "params_added": 10652,
+    "ratio": 1.0,
+    "note": "P9 compares mech vs this control (band vs random gating). The mAP delta that decides screen/futility/gate is vs the exp000 baseline, as for every experiment."
+  },
+  "pre_screen_gates": [
+    "module self-check (live anchors == selected cells' sub-anchors; +0 params; fused path)",
+    "dryrun",
+    "gradcheck (stride-4 heads both branches + P2 neck block)",
+    "tinyprobe (ratio <= 1.5)"
+  ],
+  "expected_verdict_prior": "vs baseline: Winner-track likely (the topology alone gave +0.015 with the band covering 85% of small GTs); the real question is D3 \u2014 band vs random gating per-unit. Honest prior ~55% Provisional Winner. Cost is exp001's (3x wall-clock: 25,600 stride-4 anchors in the assigner regardless of gating).",
+  "budget_estimate_gpu_h": 26,
+  "cost_note": "~4 h per seed (exp001: 243 min); 3 mech + 3 control seeds if the gate opens; P11 adds ~8 h."
+}

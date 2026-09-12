@@ -204,3 +204,14 @@ file during Phase-0.**
   sub-cell decisions be their own logits (as in exp001's real stride-4
   level, where per-unit F1 rose). evidence: exp009 (+ exp008, exp001).
   status: active.
+- `ins_016` — claim: the SPRT band is an informative selector for small
+  objects: the top-q (q=0.25) undecided stride-8 cells hold 85% (exp010) /
+  88% (exp008) of small GT centres on the frozen eval, 3.4x the 25% a
+  random budget covers; what the sparse cascade lacks is decision capacity,
+  not selection — its thin second stage loses small recall@.25 (-0.015)
+  where exp001's full stride-4 level gains (+0.009), and its residual
+  duplicate rate (0.102) already matches exp001's ungated stride-4 level
+  (0.098; baseline 0.085), so duplicates are a property of 4x anchors, not
+  the blocker. evidence: exp010/state/coverage_seed42.json, exp001/state/
+  dup_mech_seed42.json, exp008, exp001. status: active (exp010 chain
+  incomplete when written).
