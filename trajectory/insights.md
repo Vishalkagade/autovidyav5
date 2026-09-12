@@ -215,3 +215,17 @@ file during Phase-0.**
   the blocker. evidence: exp010/state/coverage_seed42.json, exp001/state/
   dup_mech_seed42.json, exp008, exp001. status: active (exp010 chain
   incomplete when written).
+- `ins_017` — claim: the sparse stride-4 cascade's failure is at the
+  DECISION stage and is not the duplicate rate: three decision rules
+  (additive accumulation, parent masked, own logits with the stage-1
+  posterior as a feature: exp008/009/010) all raise mAP50-95 on every
+  seed and all lose per-image F1 at the working point on every seed
+  (-0.0071 / -0.009 / -0.0084); cutting duplicates from 0.112 to 0.102
+  (exp001's ungated level: 0.098) moved per-unit F1 the wrong way, while
+  small recall@.25 fell ~-0.014 on every exp010 seed. The band selects the
+  right cells (85% of small GTs, ins_016) but a 4x4-window trunk on raw
+  backbone P2 plus one P3 cell cannot produce confident sub-cell decisions;
+  exp001's neck-fused P2 level can. P2 saturation: (sequential-evidence,
+  3-level head.detect) is closed; the family's remaining question — does
+  band gating of a full stride-4 level beat random gating — is exp011.
+  evidence: exp008, exp009, exp010 (+ exp001, ins_016). status: active.

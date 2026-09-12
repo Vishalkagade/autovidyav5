@@ -1,0 +1,77 @@
+{
+  "control": {
+    "loss_first": 1310.64345,
+    "loss_last": 8.71643,
+    "loss_every_20": [
+      1310.64345,
+      1335.07532,
+      1398.41798,
+      1470.29767,
+      1358.8583,
+      1073.10497,
+      295.65078,
+      18.43443,
+      8.77175,
+      8.75795
+    ],
+    "wall_min": 0.736599616209666,
+    "tripwire": {
+      "trainer_model": [
+        "SPRTDetect",
+        "random",
+        "[4.0, 8.0, 16.0, 32.0]",
+        "True",
+        "keep",
+        "feature"
+      ],
+      "ema": [
+        "SPRTDetect",
+        "random",
+        "[4.0, 8.0, 16.0, 32.0]",
+        "True",
+        "keep",
+        "feature"
+      ],
+      "trainer_model_params": 2639056
+    }
+  },
+  "mech": {
+    "loss_first": 1149.16326,
+    "loss_last": 8.56642,
+    "loss_every_20": [
+      1149.16326,
+      1274.76829,
+      1326.27666,
+      1330.8678799999998,
+      1321.51881,
+      943.5287500000001,
+      64.84804,
+      9.502690000000001,
+      8.71855,
+      8.58412
+    ],
+    "wall_min": 0.7614285151163737,
+    "tripwire": {
+      "trainer_model": [
+        "SPRTDetect",
+        "sprt",
+        "[4.0, 8.0, 16.0, 32.0]",
+        "True",
+        "keep",
+        "feature"
+      ],
+      "ema": [
+        "SPRTDetect",
+        "sprt",
+        "[4.0, 8.0, 16.0, 32.0]",
+        "True",
+        "keep",
+        "feature"
+      ],
+      "trainer_model_params": 2639056
+    }
+  },
+  "ratio_mech_over_control": 0.9827899725002094,
+  "bar": 1.5,
+  "pass": true
+}
