@@ -1,6 +1,6 @@
 #!/bin/bash
 # Local-GPU twin of scripts/pipeline.sh (same contract, same state files, same
-# gates) — plain bash, no SLURM; control legs run two at a time.
+# gates) — plain bash, no SLURM; control legs run ONE at a time (two P2-topology runs thrashed: 1058 min for one seed, exp011).
 #   nohup bash scripts/pipeline_local.sh exp001 > trajectory/scratch/exp001/local.log 2>&1 &
 set -e
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -49,9 +49,9 @@ print(("OPEN" if d >= floor else "SHUT"), round(d, 5), "floor", round(floor, 5))
 PYEOF
 )
 echo "[$(date +%H:%M:%S)] P9_CONTROL_GATE=$GATE"
-# 5. matched control (gate open only) — two at a time
+# 5. matched control (gate open only) — sequential: two 4-level-head runs OOM/thrash on 24 GB
 if [ "${GATE%% *}" = "OPEN" ]; then
-  stage control 42 & stage control 123 & wait; stage control 7
-  units control 42 & units control 123 & wait; units control 7
+  for s in $SEEDS; do stage control $s; done
+  for s in $SEEDS; do units control $s; done
 fi
 echo "[$(date +%H:%M:%S)] ${EXP^^}_ALL_DONE gate=$GATE"
