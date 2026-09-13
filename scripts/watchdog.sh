@@ -4,7 +4,7 @@
 # (4) the newest per-step log grew in the last 15 min. Exit 1 on PROBLEM.
 cd "$(cd "$(dirname "$0")/.." && pwd)"
 now=$(date +%s); problems=(); info=()
-LOG=$(ls -t trajectory/scratch/*/local.log trajectory/scratch/*/p11.log 2>/dev/null | head -1)
+LOG=$(ls -t trajectory/scratch/*/local.log trajectory/scratch/*/p11.log 2>/dev/null | while read -r f; do [ -s "$f" ] && { echo "$f"; break; }; done)   # newest NON-EMPTY log: a waiting p11.log is empty
 EXP=$(basename "$(dirname "$LOG")")
 if grep -qE "ALL_DONE|KILLED|FUTILITY_REJECT" "$LOG" 2>/dev/null; then echo "OK $EXP finished ($(grep -oE 'ALL_DONE.*|KILLED.*|FUTILITY_REJECT.*' "$LOG" | tail -1)) — nothing running, next step is on the agent"; exit 0; fi
 if grep -qE "FAILED|GATE_FAIL|FATAL" "$LOG" 2>/dev/null; then problems+=("$EXP log has $(grep -oE 'FAILED.*|GATE_FAIL.*|FATAL.*' "$LOG" | tail -1 | cut -c1-80)"); fi
