@@ -9,6 +9,7 @@ YAML = {"baseline": os.path.join(CFG, "yolo26n-sku.yaml"), "mech": os.path.join(
 STRIDES = {"baseline": [8, 16, 32], "mech": [4, 8, 16, 32], "bandgate": [4, 8, 16, 32]}
 VARIANTS = ("baseline", "mech", "bandgate")   # bandgate = exp011 (band-gated P2 level, q/B_hi from its prereg) via the SurgeryTrainer pattern
 from adapters.yolo26n_visdrone_scratch.modules import bandgate as BG
+from adapters.yolo26n_visdrone_scratch.modules import chunked_assigner; chunked_assigner.apply()   # SKU-110K density OOMs the assigner every batch with the 4-level head
 BG_PREREG = json.load(open(os.path.join(P, "trajectory", "scratch", "exp011", "prereg.json")))["mechanism"]
 def _bg_ok(net): i = BG.surgery_present(net); return i["class"] == "BandGatedDetect" and i["selection"] == "band" and i["strides"] == [4.0, 8.0, 16.0, 32.0]
 def _make_trainer(seed):
