@@ -247,3 +247,20 @@ file during Phase-0.**
   (user strategy) pending: VOC no-regression (prediction: the band removes
   exp001's VOC regression, ins_013) and SKU-110K win. evidence: exp011 (+
   exp001, ins_016, ins_017). status: active.
+- `ins_019` — claim: band gating REMOVES the P2 level's cross-dataset
+  regression. On Pascal VOC (normal objects, from scratch, same protocol
+  and the same baseline seeds as exp001's leg) the band-gated stride-4
+  level meets the pre-registered no-regression bar: mAP50 -0.0037 seed-avg
+  (floor 0.0085; seeds -0.0002/-0.0079/-0.0030) and per-image F1 -0.0021
+  with CI [-0.0059,+0.0017] (p 0.46), where exp001's ungated level failed
+  it (-0.0063; F1 -0.0050, CI [-0.0090,-0.0010], ins_013). Mechanism of
+  the difference, measured: on VOC the band covers 20-21% of medium and
+  large GT centres (n=2,002 / 9,947) — below the 25% a random budget would,
+  i.e. the stride-8 posterior is already decided on the objects and the
+  band sits on background — so the gated level is inert there, while on
+  VisDrone the same rule covers 88% of small GT centres. The band is a
+  data-adaptive switch: it spends the stride-4 decision where the first
+  stage is uncertain and withholds it where the first stage is not.
+  Confirmation strategy status: VOC no-regression PASS; SKU-110K win leg
+  running. evidence: confirm_voc/state/assembly_bandgate.json (+ ins_013,
+  exp011). status: active.
