@@ -1,0 +1,21 @@
+{
+  "dataset_root": "/home/vishalkagade/.cache/autoyolo/dataset/SKU-110K",
+  "source": "SKU110K_fixed.tar.gz (trax-geometry, CVPR challenge), ultralytics SKU-110K.yaml conversion",
+  "train": {
+    "n": 8219,
+    "sha256": "d93eb1891be9ecbb0a197bb002d0720ed2990a3ccba4b7282ff93d79ffe559a2",
+    "labels_sha256": "e2cc90fd3560ab5afbebc663d1b20d5172a9d89a2a31be7f08f524a7335077f8"
+  },
+  "eval": {
+    "n": 2936,
+    "sha256": "0a8a56d0b374536225639ed07369903fd3f9dbc616db450f25f0b926bd582570",
+    "labels_sha256": "35e3208e5c612b0303db1459e343dce9b0d5804624ecbd038790a871140b2fab",
+    "definition": "SKU-110K test split (frozen; one pass on last.pt per run)"
+  },
+  "val": {
+    "n": 588,
+    "sha256": "3611021f2e9467ccc289e3d57761b55831cb4d4950e1653d1042d871c7dcf6f0",
+    "definition": "SKU-110K val split, training-time curves only"
+  },
+  "regime_at_640": "median box side ~40 px (train 38.5 / test 41.5), 28-36% of boxes under 32 px, median 141 boxes per image (max 386)"
+}

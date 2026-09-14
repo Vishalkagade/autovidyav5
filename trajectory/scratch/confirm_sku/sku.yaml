@@ -1,0 +1,5 @@
+path: /home/vishalkagade/.cache/autoyolo/dataset/SKU-110K
+train: /home/vishalkagade/vishal/autovidyav5/trajectory/scratch/confirm_sku/sku_train.txt
+val: /home/vishalkagade/vishal/autovidyav5/trajectory/scratch/confirm_sku/sku_eval.txt
+names:
+  0: object

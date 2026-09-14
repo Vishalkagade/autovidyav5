@@ -1,0 +1,20 @@
+{
+  "track": "cross-dataset confirmation of exp011 (band-gated stride-4 decision level, VisDrone Winner) — SKU-110K, WIN leg",
+  "written": "2026-09-14 05:10 — BEFORE any SKU-110K number exists",
+  "purpose": "The user's confirmation strategy (2026-09-07): a VisDrone Winner is a model improvement only if it WINS on a second small-object set (SKU-110K) and does not regress on a normal-object set (VOC).",
+  "design": {
+    "data": "SKU-110K (ultralytics conversion): train 8,219 / FROZEN eval = test 2,936 / training-time val = val 588; single class; from scratch",
+    "regime_at_640": "median box side ~40 px, 28-36% under 32 px, median 141 boxes per image: dense and small-to-medium (VisDrone: median 8 px, 68% under 32 px)",
+    "tier3": {"imgsz": 640, "batch": 32, "amp": true, "optimizer": "MuSGD", "cache": "ram", "seeds": [42, 123, 7]},
+    "budget_rule": "same pre-registered rule as VisDrone exp000 and VOC: 200-epoch probe on seed 42 (baseline), s2 = first epoch at 97% of the 11-epoch-median-smoothed val peak, ceil 10, clamp [60,150]",
+    "runs": "baseline x3 seeds and bandgate (exp011 mechanism, q=0.25, B_hi=0.5, SurgeryTrainer) x3 seeds at s2, sequential; per-image F1 (IoU .5, conf .25) on all 2,936 eval units; band coverage of GT centres by size",
+    "control": "not run here (P9 was established on VisDrone); this leg tests transfer of the mechanism-vs-baseline effect"
+  },
+  "win_bar": {
+    "statement": "WIN iff (a) seed-averaged mAP50 (bandgate - baseline) >= +1x the SKU S2 noise floor (max-min over the 3 baseline seeds) AND (b) the seed-averaged per-unit paired test passes (bootstrap 95% CI entirely above 0) with every seed's mean positive.",
+    "on_fail": "the mechanism is a VisDrone-regime result; claim stays 'a VisDrone Winner' (cross-domain). No retry of the leg."
+  },
+  "prediction": "Objects are 5x larger than VisDrone's at 640 but 28-36% are still under one stride-8 cell and scenes are 3x denser (141 vs 53 boxes), so the band should select real undecided small products, not background. PRE-REGISTERED READING: WIN = the band-gated stride-4 level transfers to a second small-object regime; (a) passes but (b) fails = ranking gain without operating-point gain (the exp008-010 signature) on dense shelves; both fail = VisDrone-specific. Honest prior ~50% WIN.",
+  "budget_estimate_gpu_h": 16,
+  "then": "if VOC no-regression AND SKU win: exp011 is claimed as a model improvement (user strategy); write the trajectory report."
+}

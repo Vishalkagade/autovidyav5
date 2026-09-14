@@ -42,3 +42,6 @@ trajectory/scratch/*/state/log_*.txt
 trajectory/scratch/confirm_voc/voc_*.txt
 trajectory/scratch/confirm_voc/voc*.yaml
 runs_voc/
+trajectory/scratch/confirm_sku/sku_train.txt
+trajectory/scratch/confirm_sku/sku_eval.txt
+trajectory/scratch/confirm_sku/sku_val.txt
