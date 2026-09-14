@@ -1,0 +1,17 @@
+{
+  "track": "cross-dataset confirmation of exp011 (band-gated stride-4 decision level, VisDrone Winner) — Pascal VOC, NO-REGRESSION leg",
+  "written": "2026-09-14 02:10 — BEFORE any VOC number for the band-gated model exists",
+  "design": {
+    "same_as": "prereg.json (exp001's VOC leg): VOC07+12 trainval from scratch, nc=20, frozen eval VOC07 test 4,952 images, s2 epochs from probe.json, tier-3 identical",
+    "baseline_legs": "REUSED from exp001's leg (state/baseline_S2_seed{42,123,7}.json + per_unit) — same protocol, same seeds, no reason to retrain",
+    "mech_legs": "variant 'bandgate' = yolo26n-p2-voc topology + bandgate class swap via SurgeryTrainer (q=0.25, B_hi=0.5 from exp011/prereg.json), seeds 42/123/7, sequential",
+    "extra_measurement": "band coverage of VOC GT centres by size (per_unit_bandgate_seed*.json -> per_scale_recall.band_coverage)"
+  },
+  "no_regression_bar": {
+    "statement": "PASS iff (a) seed-averaged mAP50 (bandgate - baseline) >= -1x the VOC S2 noise floor (max-min over the 3 baseline seeds, measured 0.0085) AND (b) the seed-averaged per-unit paired test is NOT significantly unfavorable (bootstrap 95% CI does not lie entirely below 0).",
+    "reference": "exp001's ungated P2 level FAILED this bar on clause (b): mAP50 -0.0063, per-unit -0.0050 CI [-0.0090,-0.0010] (ins_013)."
+  },
+  "prediction": "The ungated P2 level regressed on VOC because a stride-4 decision grid adds 25,600 low-evidence anchors where objects are large (median ~150 px). Band gating keeps only q=0.25 of the stride-4 anchors live, chosen where the stride-8 posterior is undecided; on VOC those cells are mostly background around large objects, so the level should contribute little either way. PRE-REGISTERED READING: PASS with |delta| < floor = the band removes the regression (cross-domain no-regression established); FAIL on (b) again = the regression is a property of the 4-level assigner/topology, not of where the level decides, and the claim stays 'a VisDrone Winner'. Honest prior ~55% PASS.",
+  "budget_estimate_gpu_h": 7,
+  "then": "SKU-110K WIN leg (dataset not yet built) if PASS."
+}

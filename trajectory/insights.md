@@ -229,3 +229,21 @@ file during Phase-0.**
   3-level head.detect) is closed; the family's remaining question — does
   band gating of a full stride-4 level beat random gating — is exp011.
   evidence: exp008, exp009, exp010 (+ exp001, ins_016). status: active.
+- `ins_018` — claim: WHERE a stride-4 decision level is allowed to decide
+  is the mechanism, not the level itself. exp001's yolo26-p2 topology with
+  the P2 level gated by a sequential-test band (stride-8 cells whose
+  one-to-one objectness is below B_hi=0.5, top q=0.25 by objectness; the
+  rest of the level masked) is a VisDrone WINNER: mAP50 +0.0155 on the
+  working seeds (3.1x floor) and +0.0155/+0.0143 on the sealed seeds; per-
+  image F1 vs baseline +0.0106 over all five seeds (CI [+0.0088,+0.0125],
+  p 2e-37, every seed positive); vs the RANDOM-gated control (identical
+  topology, params and compute) +0.0104 (CI [+0.0082,+0.0127], p 4e-19),
+  while random gating itself is null vs baseline (+0.0011, ns). The band
+  holds 88% of small GT centres at a 25% cell budget (random: 25%) and the
+  gated level keeps 1.04x of the ungated level's small-class AP50 gain with
+  duplicates at the ungated level's rate. Source domain: Wald's SPRT
+  (decide when the posterior leaves the band, otherwise sample again).
+  Cross-domain in the P8 sense; the trajectory's first. Confirmation track
+  (user strategy) pending: VOC no-regression (prediction: the band removes
+  exp001's VOC regression, ins_013) and SKU-110K win. evidence: exp011 (+
+  exp001, ins_016, ins_017). status: active.
