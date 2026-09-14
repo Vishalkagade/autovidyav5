@@ -55,3 +55,6 @@ seed,stage,gpu_hours,cumulative
 7,exp011_control,2.395,113.606
 1000,exp011_mech_p11,2.396,116.002
 2000,exp011_mech_p11,2.392,118.394
+42,voc_bandgate,2.110,120.504
+123,voc_bandgate,2.114,122.618
+7,voc_bandgate,2.113,124.730

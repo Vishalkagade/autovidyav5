@@ -242,19 +242,42 @@
     }
   ],
   "confirmation_track": {
-    "voc": {
-      "verdict": "NO_REGRESSION FAIL (per-unit clause)",
-      "seedavg_delta_map50": -0.0063,
-      "voc_floor": 0.0085,
-      "per_unit_ci95": [
-        -0.009,
-        -0.001
-      ],
-      "wilcoxon_p": 0.0558,
-      "record": "trajectory/scratch/confirm_voc/state/assembly.json",
-      "gpu_h": 20.4
+    "exp001": {
+      "voc": {
+        "verdict": "NO_REGRESSION FAIL (per-unit clause)",
+        "seedavg_delta_map50": -0.0063,
+        "voc_floor": 0.0085,
+        "per_unit_ci95": [
+          -0.009,
+          -0.001
+        ],
+        "wilcoxon_p": 0.0558,
+        "record": "trajectory/scratch/confirm_voc/state/assembly.json",
+        "gpu_h": 20.4
+      },
+      "sku110k": "not run \u2014 moot after VOC fail"
     },
-    "sku110k": "not run \u2014 moot after VOC fail"
+    "exp011": {
+      "voc": {
+        "verdict": "NO_REGRESSION PASS",
+        "seedavg_delta_map50": -0.0037,
+        "voc_floor": 0.0085,
+        "per_unit_ci95": [
+          -0.0059,
+          0.0017
+        ],
+        "wilcoxon_p": 0.463,
+        "record": "trajectory/scratch/confirm_voc/state/assembly_bandgate.json",
+        "prereg": "trajectory/scratch/confirm_voc/prereg_exp011.json",
+        "gpu_h": 6.3,
+        "baseline_legs": "reused from exp001's leg"
+      },
+      "sku110k": {
+        "verdict": "running since 2026-09-14 08:28 (probe -> baseline x3 -> bandgate x3)",
+        "prereg": "trajectory/scratch/confirm_sku/prereg.json",
+        "record": "trajectory/scratch/confirm_sku/state/assembly_bandgate.json"
+      }
+    }
   },
   "saturated_pairs": [
     {
