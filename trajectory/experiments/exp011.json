@@ -49,6 +49,22 @@
           "precision": 0.3829154565205931,
           "recall": 0.3082860132570974
         }
+      },
+      "1000": {
+        "primary": 0.28474407887755954,
+        "secondary": {
+          "mAP50_95": 0.16112104948807063,
+          "precision": 0.38981687172522933,
+          "recall": 0.3047361816482113
+        }
+      },
+      "2000": {
+        "primary": 0.2832104476064097,
+        "secondary": {
+          "mAP50_95": 0.16054697531182488,
+          "precision": 0.3834955226367579,
+          "recall": 0.3033093296957325
+        }
       }
     }
   },
@@ -379,9 +395,9 @@
   "attribution": {
     "type": "scientific",
     "subtype": "winner-verified",
-    "evidence": "seed deltas mAP50 {'42': 0.017311263076960515, '123': 0.014708907741376676, '7': 0.01452891425116748}; seed-avg mech-baseline +0.0155 (+3.1x floor); discriminators D1 small-class AP50 deltas {42: +0.0257, 123: +0.0238, 7: +0.0223} vs large-class {42: +0.0171, 123: +0.0076, 7: +0.0020}; D4 dup_frac {42: 0.10024626498111969, 123: 0.09311911034962096, 7: 0.09526258169392562} (bar 0.105); D5 small-GT coverage {42: 0.8781500268302808, 123: 0.885095525924126, 7: 0.8869078354544442} (bar 0.6); evidence-account reading: sparse cascade recovers the P2 effect -> PASS; P9_CONTROL_GATE=OPEN 0.01552 floor 0.00497; Band-gated stride-4 decision level (exp001's yolo26-p2 topology; the P2 level decides only in the SPRT band, q=0.25 of stride-8 cells with one-to-one objectness < B_hi=0.5). Control = the same topology gated on RANDOM cells (identical params/compute). The band holds 88% of small GT centres on every seed vs 25% for random gating (D5). Duplicates 0.100/0.093/0.095 (D4 bar 0.105; exp001 ungated 0.098). Small-class AP50 +0.024 seed-avg = 1.04x exp001's (D2: band gating RETAINS the P2 level's effect). Operational: the pipeline ran two control legs in parallel; two 4-level-head trainings thrash on 24 GB (control seed 42 took 1058 min, control seed 123 OOM'd after 15.7 h and was re-run alone; pipeline_local.sh now runs controls sequentially, ee31880). The session was logged out from ~12:09 to 18:45 on 2026-09-13 with the GPU idle; no run was lost."
+    "evidence": "seed deltas mAP50 {'42': 0.017311263076960515, '123': 0.014708907741376676, '7': 0.01452891425116748}; seed-avg mech-baseline +0.0155 (+3.1x floor); discriminators D1 small-class AP50 deltas {42: +0.0257, 123: +0.0238, 7: +0.0223} vs large-class {42: +0.0171, 123: +0.0076, 7: +0.0020}; D4 dup_frac {42: 0.10024626498111969, 123: 0.09311911034962096, 7: 0.09526258169392562} (bar 0.105); D5 small-GT coverage {42: 0.8781500268302808, 123: 0.885095525924126, 7: 0.8869078354544442} (bar 0.6); evidence-account reading: sparse cascade recovers the P2 effect -> PASS; P9_CONTROL_GATE=OPEN 0.01552 floor 0.00497; Band-gated stride-4 decision level (exp001's yolo26-p2 topology; the P2 level decides only in the SPRT band, q=0.25 of stride-8 cells with one-to-one objectness < B_hi=0.5). Control = the same topology gated on RANDOM cells (identical params/compute). The band holds 88% of small GT centres on every seed vs 25% for random gating (D5). Duplicates 0.100/0.093/0.095 (D4 bar 0.105; exp001 ungated 0.098). Small-class AP50 +0.024 seed-avg = 1.04x exp001's (D2: band gating RETAINS the P2 level's effect). Operational: the pipeline ran two control legs in parallel; two 4-level-head trainings thrash on 24 GB (control seed 42 took 1058 min, control seed 123 OOM'd after 15.7 h and was re-run alone; pipeline_local.sh now runs controls sequentially, ee31880). The session was logged out from ~12:09 to 18:45 on 2026-09-13 with the GPU idle; no run was lost.; P11 Winner: confirmation deltas {1000: 0.015457612104055773, 2000: 0.01432834469046379}, combined vs-baseline CI (0.008791400664322564, 0.012480263740783669), replicated: every confirmation seed favorable, both combined per-unit tests pass"
   },
-  "classification": "Provisional Winner",
+  "classification": "Winner",
   "discriminator": {
     "statement": "mean AP50 over small-dominated classes {pedestrian, people, bicycle, motor} must RISE vs the seed-matched baseline on every working seed | reading: PRE-REGISTERED READING: seed-averaged small-class AP50 delta >= 0.5x exp001's means band gating RETAINS the P2 level's effect; < 0.25x means the band starves it. | The P9/P10 mechanism-vs-control comparison IS the selection-rule test: the random-gated control has identical topology, params and compute; if band gating does not beat random gating per-unit, the band is not the mechanism. | D4: dup_frac (conf .25, IoU .5) <= 0.105 on every working seed (exp001, the ungated level, measures 0.098; baseline 0.085). | D5: Fraction of small GT centres (input-scale side < 32 px) inside selected cells >= 0.60 on every working seed (random gating expects q = 0.25; exp010 measured 0.85). Below it the band did not select the small objects and D3 cannot be credited to selection.",
     "by_seed": {
@@ -427,6 +443,73 @@
     },
     "pass": true
   },
-  "cost_gpu_hours": 29.5411823625697,
-  "notes": "Band-gated stride-4 decision level (exp001's yolo26-p2 topology; the P2 level decides only in the SPRT band, q=0.25 of stride-8 cells with one-to-one objectness < B_hi=0.5). Control = the same topology gated on RANDOM cells (identical params/compute). The band holds 88% of small GT centres on every seed vs 25% for random gating (D5). Duplicates 0.100/0.093/0.095 (D4 bar 0.105; exp001 ungated 0.098). Small-class AP50 +0.024 seed-avg = 1.04x exp001's (D2: band gating RETAINS the P2 level's effect). Operational: the pipeline ran two control legs in parallel; two 4-level-head trainings thrash on 24 GB (control seed 42 took 1058 min, control seed 123 OOM'd after 15.7 h and was re-run alone; pipeline_local.sh now runs controls sequentially, ee31880). The session was logged out from ~12:09 to 18:45 on 2026-09-13 with the GPU idle; no run was lost."
+  "cost_gpu_hours": 34.32884701516893,
+  "notes": "Band-gated stride-4 decision level (exp001's yolo26-p2 topology; the P2 level decides only in the SPRT band, q=0.25 of stride-8 cells with one-to-one objectness < B_hi=0.5). Control = the same topology gated on RANDOM cells (identical params/compute). The band holds 88% of small GT centres on every seed vs 25% for random gating (D5). Duplicates 0.100/0.093/0.095 (D4 bar 0.105; exp001 ungated 0.098). Small-class AP50 +0.024 seed-avg = 1.04x exp001's (D2: band gating RETAINS the P2 level's effect). Operational: the pipeline ran two control legs in parallel; two 4-level-head trainings thrash on 24 GB (control seed 42 took 1058 min, control seed 123 OOM'd after 15.7 h and was re-run alone; pipeline_local.sh now runs controls sequentially, ee31880). The session was logged out from ~12:09 to 18:45 on 2026-09-13 with the GPU idle; no run was lost.",
+  "p11": {
+    "confirmation_seeds": [
+      1000,
+      2000
+    ],
+    "per_seed_confirmation_deltas_map50": {
+      "1000": 0.015457612104055773,
+      "2000": 0.01432834469046379
+    },
+    "per_seed_deltas": {
+      "1000": 0.015457612104055773,
+      "2000": 0.01432834469046379
+    },
+    "confirmation_seed_metrics": {
+      "1000": {
+        "baseline": 0.26928646677350376,
+        "mech": 0.28474407887755954,
+        "mech_small_recall": 0.2381075391033672
+      },
+      "2000": {
+        "baseline": 0.2688821029159459,
+        "mech": 0.2832104476064097,
+        "mech_small_recall": 0.23613138214742388
+      }
+    },
+    "combined_vs_baseline": {
+      "n_units": 2158,
+      "mean_diff": 0.01064319450274759,
+      "median_diff": 0.010075694877819497,
+      "ci95": [
+        0.008791400664322564,
+        0.012480263740783669
+      ],
+      "wilcoxon_p": 2.0520586968625706e-37,
+      "units_improved": 1326,
+      "per_seed_means": {
+        "7": 0.011047793846039603,
+        "42": 0.009347310488778607,
+        "123": 0.014127350870783728,
+        "1000": 0.008776205255928687,
+        "2000": 0.009917312052207321
+      },
+      "verdict": "pass",
+      "reason": "per-unit gate passed: CI excludes 0 in favorable direction"
+    },
+    "combined_vs_control": {
+      "n_units": 2158,
+      "mean_diff": 0.010433646334167015,
+      "median_diff": 0.00751928226028877,
+      "ci95": [
+        0.008227190085399053,
+        0.012651290052658996
+      ],
+      "wilcoxon_p": 4.233009622331654e-19,
+      "units_improved": 1246,
+      "per_seed_means": {
+        "7": 0.009138708321449935,
+        "42": 0.007802813541750681,
+        "123": 0.014359417139300428
+      },
+      "verdict": "pass",
+      "reason": "per-unit gate passed: CI excludes 0 in favorable direction"
+    },
+    "control_replicated": false,
+    "verdict": "Winner",
+    "reason": "replicated: every confirmation seed favorable, both combined per-unit tests pass"
+  }
 }
