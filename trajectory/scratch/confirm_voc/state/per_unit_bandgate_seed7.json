@@ -10,18 +10,19 @@
     "large_recall": 0.8163024990187099,
     "band_coverage": {
       "small": {
-        "covered": 0.3373493975903614,
+        "covered": 0.8192771084337349,
         "n": 83
       },
       "medium": {
-        "covered": 0.2122877122877123,
+        "covered": 0.6963036963036963,
         "n": 2002
       },
       "large": {
-        "covered": 0.19965818839851213,
+        "covered": 0.4398311048557354,
         "n": 9947
       }
-    }
+    },
+    "band_coverage_note": "recomputed on the square 640 grid (2026-09-15); the value written by the original units step used predict's rectangular grid and was wrong"
   },
   "units": [
     [

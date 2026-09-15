@@ -42,21 +42,22 @@
         "large_recall": 0.8961879862950315,
         "band_coverage": {
           "small": {
-            "covered": 0.2157078286024227,
-            "n": 138275
+            "covered": 0.46021059026020045,
+            "n": 138278
           },
           "medium": {
-            "covered": 0.21027445799877528,
-            "n": 290682
+            "covered": 0.2090391400334248,
+            "n": 290802
           },
           "large": {
-            "covered": 0.2323314378554021,
-            "n": 2462
+            "covered": 0.30940794809407945,
+            "n": 2466
           }
         },
         "skipped_unreadable": [
           "test_274.jpg"
-        ]
+        ],
+        "band_coverage_note": "recomputed on the square 640 grid (2026-09-15); the value written by the original units step used predict's rectangular grid and was wrong"
       }
     },
     "123": {
@@ -74,21 +75,22 @@
         "large_recall": 0.8857758437156702,
         "band_coverage": {
           "small": {
-            "covered": 0.21328512023142288,
-            "n": 138275
+            "covered": 0.44605070944040265,
+            "n": 138278
           },
           "medium": {
-            "covered": 0.21003708519963396,
-            "n": 290682
+            "covered": 0.1966045625545904,
+            "n": 290802
           },
           "large": {
-            "covered": 0.2124289195775792,
-            "n": 2462
+            "covered": 0.20762368207623683,
+            "n": 2466
           }
         },
         "skipped_unreadable": [
           "test_274.jpg"
-        ]
+        ],
+        "band_coverage_note": "recomputed on the square 640 grid (2026-09-15); the value written by the original units step used predict's rectangular grid and was wrong"
       }
     },
     "7": {
@@ -106,21 +108,22 @@
         "large_recall": 0.8696324808888359,
         "band_coverage": {
           "small": {
-            "covered": 0.2191502440788284,
-            "n": 138275
+            "covered": 0.6549631900953152,
+            "n": 138278
           },
           "medium": {
-            "covered": 0.21495999064269544,
-            "n": 290682
+            "covered": 0.293333608434605,
+            "n": 290802
           },
           "large": {
-            "covered": 0.20796100731112915,
-            "n": 2462
+            "covered": 0.24371451743714517,
+            "n": 2466
           }
         },
         "skipped_unreadable": [
           "test_274.jpg"
-        ]
+        ],
+        "band_coverage_note": "recomputed on the square 640 grid (2026-09-15); the value written by the original units step used predict's rectangular grid and was wrong"
       }
     }
   },

@@ -51,6 +51,15 @@ def train(variant, epochs, seed, name):
             "primary": float(f.box.map50), "secondary": {"mAP50_95": float(f.box.map), "precision": float(f.box.mp), "recall": float(f.box.mr)},
             "per_class_ap50": [{"class_name": last.names[int(i)], "value": float(a)} for i, a in zip(f.box.ap_class_index, f.box.ap50)],
             "curve_val500_map50": _curve(str(tr.save_dir)), "wall_min": (time.time() - t0) / 60}
+def _band_cells(net, p):
+    """Selected stride-8 cells of a BandGatedDetect model on the square 640x640 letterbox -> (set of 80x80 cell indices, scale, pad_x, pad_y)."""
+    import cv2, torch
+    from ultralytics.data.augment import LetterBox
+    im0 = cv2.imread(p); h0, w0 = im0.shape[:2]; r = min(640 / h0, 640 / w0); px, py = (640 - round(w0 * r)) / 2, (640 - round(h0 * r)) / 2
+    prm = next(net.parameters()); x = torch.from_numpy(LetterBox((640, 640), auto=False)(image=im0)[..., ::-1].copy()).permute(2, 0, 1)[None].to(prm.device, prm.dtype) / 255
+    with torch.no_grad(): net(x)
+    return set(net.model[-1].last_sel[0].tolist()), r, px, py
+
 def per_unit_and_scale(weights):
     from ultralytics import YOLO
     m = YOLO(weights); imgs = sorted(l.strip() for l in open(_yaml.safe_load(open(DATA))["val"]) if l.strip())
@@ -61,9 +70,8 @@ def per_unit_and_scale(weights):
         except ValueError as e:   # truncated JPEG (SKU-110K test_274.jpg): the validator's scanner ignores it too, so the unit set is the validator's
             skipped.append(os.path.basename(p)); continue
         gt = _gt(p)
-        if gated:   # band coverage of GT centres (input scale; letterbox to 640, cell = stride-8 index)
-            from PIL import Image
-            w0, h0 = Image.open(p).size; rr = min(640 / h0, 640 / w0); px, py = (640 - round(w0 * rr)) / 2, (640 - round(h0 * rr)) / 2; sel = set(det.last_sel[0].tolist())
+        if gated:   # band coverage of GT centres on the SQUARE 640 grid (a dedicated forward: predict letterboxes to a rectangle, whose cell indices are not an 80x80 grid)
+            sel, rr, px, py = _band_cells(m.model, p)
             for _, x1, y1, x2, y2 in gt:
                 side = max(x2 - x1, y2 - y1) * rr; k = "small" if side < 32 else ("medium" if side < 96 else "large"); X, Y = ((x1 + x2) / 2) * rr + px, ((y1 + y2) / 2) * rr + py
                 cov[k][1] += 1; cov[k][0] += (int(Y // 8) * 80 + int(X // 8)) in sel
@@ -97,6 +105,22 @@ def cmd_finish(a):
 def cmd_units(a):
     u, ps = per_unit_and_scale(a.weights); v = [x for _, x in u]
     _w(f"per_unit_{a.variant}_seed{a.seed}.json", {"variant": a.variant, "seed": a.seed, "n_units": len(u), "mean_f1": sum(v) / len(v), "degenerate_frac": sum(1 for x in v if x in (0.0, 1.0)) / len(v), "per_scale_recall": ps, "units": u})
+def cmd_coverage(a):
+    """Recompute band_coverage (square-grid fix, 2026-09-15) inside an existing per-unit file; units untouched."""
+    from ultralytics import YOLO
+    f = os.path.join(ST, f"per_unit_{a.variant}_seed{a.seed}.json"); d = json.load(open(f)); m = YOLO(json.load(open(os.path.join(ST, f"{a.variant}_S2_seed{a.seed}.json")))["save_dir"] + "/weights/last.pt")
+    net = m.model.cuda().eval(); imgs = sorted(l.strip() for l in open(_yaml.safe_load(open(DATA))["val"]) if l.strip()); cov = {"small": [0, 0], "medium": [0, 0], "large": [0, 0]}
+    for p in imgs:
+        import cv2
+        if cv2.imread(p) is None: continue
+        sel, rr, px, py = _band_cells(net, p)
+        for _, x1, y1, x2, y2 in _gt(p):
+            side = max(x2 - x1, y2 - y1) * rr; k = "small" if side < 32 else ("medium" if side < 96 else "large"); X, Y = ((x1 + x2) / 2) * rr + px, ((y1 + y2) / 2) * rr + py
+            cov[k][1] += 1; cov[k][0] += (int(Y // 8) * 80 + int(X // 8)) in sel
+    d["per_scale_recall"]["band_coverage"] = {k: {"covered": v[0] / max(1, v[1]), "n": v[1]} for k, v in cov.items()}
+    d["per_scale_recall"]["band_coverage_note"] = "recomputed on the square 640 grid (2026-09-15); the value written by the original units step used predict's rectangular grid and was wrong"
+    json.dump(d, open(f, "w"), indent=2); print("[coverage]", a.variant, a.seed, d["per_scale_recall"]["band_coverage"])
+
 def cmd_assemble(a):
     from core.discipline.p10_stats_gate import paired_unit_test
     S = (42, 123, 7); L = lambda n: json.load(open(os.path.join(ST, n))); mv = a.mech_variant
@@ -116,5 +140,6 @@ def main():
     s = sub.add_parser("stage"); s.add_argument("--variant", choices=VARIANTS, required=True); s.add_argument("--seed", type=int, required=True)
     fi = sub.add_parser("finish"); fi.add_argument("--variant", choices=VARIANTS, required=True); fi.add_argument("--seed", type=int, required=True)
     u = sub.add_parser("units"); u.add_argument("--variant", choices=VARIANTS, required=True); u.add_argument("--seed", type=int, required=True); u.add_argument("--weights", required=True)
-    a = p.parse_args(); {"probe": cmd_probe, "stage": cmd_stage, "units": cmd_units, "assemble": cmd_assemble, "finish": cmd_finish}[a.cmd](a)
+    c = sub.add_parser("coverage"); c.add_argument("--variant", choices=VARIANTS, required=True); c.add_argument("--seed", type=int, required=True)
+    a = p.parse_args(); {"probe": cmd_probe, "stage": cmd_stage, "units": cmd_units, "assemble": cmd_assemble, "finish": cmd_finish, "coverage": cmd_coverage}[a.cmd](a)
 if __name__ == "__main__": main()
