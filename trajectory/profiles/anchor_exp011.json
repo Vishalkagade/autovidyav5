@@ -1,0 +1,303 @@
+{
+  "anchor": "exp011",
+  "mechanism": {
+    "name": "Band-gated stride-4 decision level: SPRT band from the stride-8 posterior gates the P2 level of the yolo26-p2 topology (q=0.25, B_hi=0.5)",
+    "source_domain": "sequential_analysis (Wald 1945, sequential probability ratio test)",
+    "kind": "site_wrap",
+    "family": "sequential-evidence",
+    "site": "head.detect (4-level, yolo26-p2 topology)",
+    "params_count": 10652
+  },
+  "rule": {
+    "q": 0.25,
+    "b_hi": 0.5,
+    "selection": "top-q of stride-8 cells by one2one objectness among cells with objectness < b_hi; their four stride-4 anchors stay live, all others masked (logit -10, box 0)"
+  },
+  "params_added": 10652,
+  "flops_x": 1.3,
+  "visdrone": {
+    "baseline_map50_by_seed": {
+      "42": 0.2697,
+      "123": 0.2733,
+      "7": 0.2683,
+      "1000": 0.2693,
+      "2000": 0.2689
+    },
+    "anchor_map50_by_seed": {
+      "42": 0.2870089124968037,
+      "123": 0.287978642099599,
+      "7": 0.28283122917160053,
+      "1000": 0.28474407887755954,
+      "2000": 0.2832104476064097
+    },
+    "seedavg_delta_map50": 0.01551636168983489,
+    "p10_vs_baseline": {
+      "n_units": 2158,
+      "mean_diff": 0.01150748506853398,
+      "median_diff": 0.01226398922874311,
+      "ci95": [
+        0.009273144250761667,
+        0.01373464314630565
+      ],
+      "wilcoxon_p": 1.414588929086357e-30,
+      "units_improved": 1331,
+      "per_seed_means": {
+        "7": 0.011047793846039603,
+        "42": 0.009347310488778607,
+        "123": 0.014127350870783728
+      },
+      "verdict": "pass",
+      "reason": "per-unit gate passed: CI excludes 0 in favorable direction"
+    },
+    "p10_vs_random_gate": {
+      "n_units": 2158,
+      "mean_diff": 0.010433646334167015,
+      "median_diff": 0.00751928226028877,
+      "ci95": [
+        0.008227190085399053,
+        0.012651290052658996
+      ],
+      "wilcoxon_p": 4.233009622331654e-19,
+      "units_improved": 1246,
+      "per_seed_means": {
+        "7": 0.009138708321449935,
+        "42": 0.007802813541750681,
+        "123": 0.014359417139300428
+      },
+      "verdict": "pass",
+      "reason": "per-unit gate passed: CI excludes 0 in favorable direction"
+    },
+    "p11": "Winner",
+    "band_coverage_small_gt": 0.88,
+    "cells_decided_frac": 0.0013598958333333334,
+    "gt_by_cell_state": {
+      "small": {
+        "decided": 0.09368914532996754,
+        "band": 0.8788315903353768,
+        "other": 0.02747926433465561,
+        "n": 13865
+      },
+      "medium": {
+        "decided": 0.3734015345268542,
+        "band": 0.4470588235294118,
+        "other": 0.179539641943734,
+        "n": 1955
+      },
+      "large": {
+        "decided": 0.0,
+        "band": 0.38333333333333336,
+        "other": 0.6166666666666667,
+        "n": 60
+      }
+    },
+    "frac_detections_from_stride4": 0.4380661965967433,
+    "wall_min_per_seed": 142
+  },
+  "voc": {
+    "bar": "no-regression (prereg_exp011.json)",
+    "verdict": "PASS",
+    "seedavg_delta_map50": -0.003685790344384469,
+    "floor": 0.008463387698158686,
+    "per_unit": {
+      "n_units": 4952,
+      "mean_diff": -0.0021279435507094067,
+      "ci95": [
+        -0.005906208440846612,
+        0.001690819881890204
+      ],
+      "wilcoxon_p": 0.4630593752544677,
+      "per_seed_means": {
+        "7": -0.0033797489656865196,
+        "42": 0.002057590018082752,
+        "123": -0.005061671704524453
+      }
+    },
+    "band_coverage": {
+      "42": {
+        "small": {
+          "covered": 0.8674698795180723,
+          "n": 83
+        },
+        "medium": {
+          "covered": 0.6213786213786214,
+          "n": 2002
+        },
+        "large": {
+          "covered": 0.41530109580778124,
+          "n": 9947
+        }
+      },
+      "123": {
+        "small": {
+          "covered": 0.8554216867469879,
+          "n": 83
+        },
+        "medium": {
+          "covered": 0.6973026973026973,
+          "n": 2002
+        },
+        "large": {
+          "covered": 0.4595355383532723,
+          "n": 9947
+        }
+      },
+      "7": {
+        "small": {
+          "covered": 0.8192771084337349,
+          "n": 83
+        },
+        "medium": {
+          "covered": 0.6963036963036963,
+          "n": 2002
+        },
+        "large": {
+          "covered": 0.4398311048557354,
+          "n": 9947
+        }
+      }
+    },
+    "cells_decided_frac": 3.3333333333333335e-05,
+    "gt_by_cell_state": {
+      "small": {
+        "decided": 0.0,
+        "band": 1.0,
+        "other": 0.0,
+        "n": 5
+      },
+      "medium": {
+        "decided": 0.174496644295302,
+        "band": 0.5838926174496645,
+        "other": 0.24161073825503357,
+        "n": 149
+      },
+      "large": {
+        "decided": 0.0030959752321981426,
+        "band": 0.4582043343653251,
+        "other": 0.5386996904024768,
+        "n": 646
+      }
+    },
+    "frac_detections_from_stride4": 0.001642857142857143,
+    "wall_min_per_seed": 127
+  },
+  "sku110k": {
+    "bar": "win (confirm_sku/prereg.json)",
+    "verdict": "FAIL, significant regression",
+    "seedavg_delta_map50": -0.01303715217542308,
+    "floor": 0.001605212126317368,
+    "per_unit": {
+      "n_units": 2935,
+      "mean_diff": -0.01437527926681985,
+      "ci95": [
+        -0.0154484478145471,
+        -0.013302626334491127
+      ],
+      "wilcoxon_p": 4.3836548064706877e-163,
+      "per_seed_means": {
+        "7": -0.027005084583838768,
+        "42": -0.0027890502244269757,
+        "123": -0.013331702992193798
+      }
+    },
+    "per_scale_recall_delta_by_seed": {
+      "42": {
+        "small_recall": 0.028957528957528955,
+        "medium_recall": -0.04065123378275248,
+        "large_recall": -0.003874747715602034
+      },
+      "123": {
+        "small_recall": -0.009652509652509661,
+        "medium_recall": -0.07255151360976853,
+        "large_recall": -0.01354884311103921
+      },
+      "7": {
+        "small_recall": -0.009652509652509661,
+        "medium_recall": -0.074917323836174,
+        "large_recall": -0.032950968119200286
+      }
+    },
+    "band_coverage": {
+      "42": {
+        "small": {
+          "covered": 0.46021059026020045,
+          "n": 138278
+        },
+        "medium": {
+          "covered": 0.2090391400334248,
+          "n": 290802
+        },
+        "large": {
+          "covered": 0.30940794809407945,
+          "n": 2466
+        }
+      },
+      "123": {
+        "small": {
+          "covered": 0.44605070944040265,
+          "n": 138278
+        },
+        "medium": {
+          "covered": 0.1966045625545904,
+          "n": 290802
+        },
+        "large": {
+          "covered": 0.20762368207623683,
+          "n": 2466
+        }
+      },
+      "7": {
+        "small": {
+          "covered": 0.6549631900953152,
+          "n": 138278
+        },
+        "medium": {
+          "covered": 0.293333608434605,
+          "n": 290802
+        },
+        "large": {
+          "covered": 0.24371451743714517,
+          "n": 2466
+        }
+      }
+    },
+    "cells_decided_frac": 0.01677447916666667,
+    "gt_by_cell_state": {
+      "small": {
+        "decided": 0.2910904712762298,
+        "band": 0.4890952872377021,
+        "other": 0.21981424148606812,
+        "n": 14535
+      },
+      "medium": {
+        "decided": 0.5178719866999169,
+        "band": 0.21539484621778887,
+        "other": 0.2667331670822943,
+        "n": 30075
+      },
+      "large": {
+        "decided": 0.1782608695652174,
+        "band": 0.3173913043478261,
+        "other": 0.5043478260869565,
+        "n": 230
+      }
+    },
+    "frac_detections_from_stride4": 0.10219502043731483,
+    "ungated_level_diagnostic": {
+      "seedavg_delta_map50": 0.0016418477527202862,
+      "per_unit_ci95": [
+        0.00101077158368979,
+        0.002526454237608995
+      ],
+      "reading": "the gating is the loss, not the topology (ins_021)"
+    },
+    "wall_min_per_seed": 223
+  },
+  "failure_account": "ins_020/ins_021: on dense medium-object scenes the stride-8 posterior has decided half the objects; the band (top-q by objectness among the undecided) lands on and next to those objects, its live stride-4 anchors compete with decided stride-8 anchors in the one-to-one assignment, and the selection moves as the posterior trains, so targets flip between levels. The rule is right where coarse-grid uncertainty tracks sub-cell objects (VisDrone), inert where objects are large (VOC), wrong where the scene is dense and medium (SKU).",
+  "insights": [
+    "ins_018",
+    "ins_019",
+    "ins_020",
+    "ins_021"
+  ],
+  "written": "2026-09-15"
+}

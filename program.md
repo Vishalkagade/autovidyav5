@@ -364,10 +364,45 @@ replication (P11). Best-motivated first candidates (from the v5 handoff):
 the P2-evidence-fusion family (failed on COCO — the hypothesis test) and the
 cascade family — both still enter through the full gate chain.
 
-**Phase-2 (Exploit) — DEFERRED.** This trajectory's scope is Phase-0 and
-Phase-1 only. The trajectory ends when Phase-1 yields a Winner or a
-structured null. The Phase-2 protocol (refinement of a confirmed anchor)
-will be specified in a later revision of this document; do not improvise it.
+**Phase-2 (Exploit) — ACTIVE (user decision 2026-09-15, "refine the
+winner mechanism so it will work for different applications").** Phase-1
+ended with a cross-domain Winner: exp011, the band-gated stride-4
+decision level (VisDrone Winner; VOC no-regression PASS; SKU-110K win
+FAIL, diagnosed as the gating rule, ins_018-021). Protocol:
+
+- **Anchor (P7).** exp011. Its profile is
+  `trajectory/profiles/anchor_exp011.json` (per-dataset baseline/anchor
+  numbers, per-unit tests, band coverage, decided-cell fractions, the
+  failure account). Every Phase-2 prereg cites the profile field it
+  targets.
+- **Objective = TRANSFER without loss.** A refinement is a Phase-2 Winner
+  iff, on every dataset where the anchor was tested, it passes the
+  pre-registered NO-REGRESSION bar vs the vanilla baseline (VisDrone /
+  VOC / SKU-110K bars as in the confirm preregs) AND it beats the ANCHOR
+  per-unit (P10 pass, every seed positive) on at least one dataset where
+  the anchor failed its bar, AND it does not lose to the anchor per-unit
+  (CI not entirely below 0) on any dataset where the anchor won. A win
+  vs the vanilla baseline on SKU-110K is recorded if it happens but is not
+  required (the ungated level itself only reaches the floor there,
+  ins_021).
+- **Control = the anchor** at the same seeds (exp011 legs exist on all
+  three sets). Order of spend: SKU-110K first (the regime the anchor
+  fails; first seed = screen), then VisDrone vs anchor, then VOC.
+- **Refinement axes (frozen strings; one axis per experiment):**
+  `R1-formula` (the selection rule), `R1-position` (what the gate reads /
+  which level it gates), `R1-paramcount` (capacity of the gated level),
+  `R2-aux` (an auxiliary objective for the gate), `R3-coupling`
+  (assignment/target sharing between the gated level and stage 1),
+  `R4-cross-domain` (a new source-domain rule replacing the SPRT band).
+- **P5 — refinement-axis saturation.** Two consecutive scientific
+  failures on one axis close it for the anchor; all axes closed =
+  Phase-2 structured null (report).
+- **Inherited unchanged:** tournament with the 5 fixed criteria ->
+  prereg with a discriminator BEFORE any number -> P6'/P8 -> first-seed
+  screen -> remaining seeds -> per-unit -> P10 vs anchor -> P11 sealed
+  seeds on the dataset that decided the class -> Phase-1 vocabulary. One
+  P4 retry per refinement. Commit per experiment. Cost logged, no budget
+  stop (user waived).
 
 ## Discipline layer
 
@@ -378,9 +413,9 @@ will be specified in a later revision of this document; do not improvise it.
 | **P2** | Class-site saturation detection | 3+ scientific failures from the same mechanism class at the same architectural site | declare the class-site PAIR saturated; redirect future proposals away from this combination *(text below)* |
 | **P3** | Orthogonal composition gate | about to declare the trajectory null with ≥2 Hold-classified mechanisms | check Hold pairs for three-axis orthogonality; any orthogonal pair must be attempted as a composition before stopping *(text below)* |
 | **P4** | Targeted retry | a single diagnosable design flaw explains a scientific failure | one corrected retry permitted, capped at one per experiment *(text below)* |
-| **P5** | Refinement-axis saturation | *(dormant — Phase-2 gate, activates with the Phase-2 revision)* | — |
+| **P5** | Refinement-axis saturation | two consecutive scientific failures on one refinement axis of the anchor | close the axis; all axes closed = Phase-2 structured null (see "Phase-2") |
 | **P6'** | Gradient-flow check | before the screen | adapter check, gate to Op-Fail |
-| **P7** | Anchor-profile mandate | *(dormant — Phase-2 gate, activates with the Phase-2 revision)* | — |
+| **P7** | Anchor-profile mandate | every Phase-2 proposal | block entry unless the prereg cites the anchor-profile field it targets (see "Phase-2") |
 | **P8** | Novelty audit | before the screen | block entry without a mechanistic nearest-analog statement in the record |
 | **P9** | Matched-control attribution | pre-screen (budget) + post-Stage-2 (control-deferral gate) + classification | block Winner-track without control; spend the control run only when `mech_minus_baseline` >= 1x S2 noise floor; report form-vs-capacity split |
 | **P10** | Per-unit statistics, both comparisons | classification | block Winner-track unless paired test passes vs baseline AND vs control |
@@ -458,7 +493,7 @@ Not allowed: standard CV primitives as the proposal itself (SE, CBAM, ECA,
 BiFPN, deformable conv, plain attention swaps); mechanisms whose only novelty
 is capacity; anything that fails the P8 novelty audit.
 
-## Refinement axes — deferred with Phase-2
+## Refinement axes — ACTIVE with Phase-2 (2026-09-15; see "Phase-2" above)
 
 The frozen axis string set (`R1-formula` · `R1-position` · `R1-paramcount` ·
 `R2-aux` · `R3-coupling` · `R4-cross-domain`) belongs to the Phase-2 protocol

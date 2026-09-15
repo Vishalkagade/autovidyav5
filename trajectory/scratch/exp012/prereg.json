@@ -1,0 +1,21 @@
+{
+  "exp": "exp012", "phase": "phase-2", "axis": "R1-formula", "anchor": "exp011",
+  "written": "2026-09-15 — BEFORE any number for the size-aware band exists",
+  "targets_anchor_profile_fields": ["sku110k.failure_account", "sku110k.gt_by_cell_state", "sku110k.ungated_level_diagnostic", "visdrone.gt_by_cell_state"],
+  "mechanism": {"name": "Size-aware SPRT band: a stride-8 cell takes the stride-4 second sample only if undecided (o < B_hi) AND stage 1's predicted box side < 32 px; top-q among those, empty slots otherwise", "kind": "site_wrap", "site": "head.detect (4-level yolo26-p2 topology)", "module": "adapters.yolo26n_visdrone_scratch.modules.bandgate (size_thr=32)", "family": "sequential-evidence", "params_added_measured": 10652, "params_added_vs_anchor": 0, "q": 0.25, "b_hi": 0.5, "size_thr_px": 32.0, "source_domain": "sequential_analysis (Wald 1945): a further sample is taken only where it is informative"},
+  "novelty_audit": {"nearest_cv_analog": "QueryDet (sparse high-res queries where a small-object query head fires); scale-aware routing in dynamic-resolution detectors", "mechanism_of_difference": "No extra head or loss: the decision to resample reads stage 1's OWN posterior (undecided band) and its OWN size estimate (box head); versus the anchor the only change is the size clause, which turns the level off where the first stage sees a large object.", "regime_argument": "The anchor's loss on SKU-110K is the gating firing on ~40-px products (ins_020/021); the gain on VisDrone is on ~8-px objects (88% of small GT in the band). A size clause at the COCO-small boundary separates the two regimes with a quantity stage 1 already computes."},
+  "datasets_in_order": ["sku110k", "visdrone", "voc"],
+  "bars": {
+    "sku110k": {"screen_seed42": "PROMOTE iff mAP50(refinement, seed 42) >= baseline(seed 42) - 2x SKU floor (0.0016); else KILL", "no_regression_vs_baseline": "seed-avg mAP50 >= baseline - 1x floor AND per-unit vs baseline not significantly unfavorable", "vs_anchor": "P10 per-unit refinement vs anchor: pass (CI > 0) with every seed positive — REQUIRED (the dataset where the anchor failed)", "win_vs_baseline": "recorded if it happens; not required"},
+    "visdrone": {"no_regression_vs_anchor": "seed-avg mAP50 >= anchor - 1x VisDrone floor (0.00497) AND per-unit vs anchor CI not entirely below 0", "vs_baseline": "must still pass P10 vs baseline (the anchor's gain retained)"},
+    "voc": {"no_regression_vs_baseline": "the prereg_exp011.json bar"}
+  },
+  "discriminators": {
+    "D1_level_quiet_on_sku": "fraction of detections at conf .25 from the stride-4 level on SKU-110K must fall below 0.02 (anchor: 0.10) on every seed — the size clause must actually switch the level off there",
+    "D2_band_kept_on_visdrone": "small-GT band coverage on VisDrone >= 0.80 on every seed (anchor 0.88) — the size clause must not starve the aerial regime",
+    "on_fail": "classify from the bars as usual; a discriminator failure means the account is wrong even if a bar passes"
+  },
+  "classification": "Phase-2 Winner iff all three datasets pass their bars (program.md Phase-2); Hold if direction-consistent but a per-unit test fails; Reject otherwise. P11 sealed seeds on VisDrone if Winner.",
+  "expected_verdict_prior": "SKU back to baseline (no loss) ~70%; VisDrone unchanged ~80%; a WIN vs baseline on SKU ~10% (the ungated level itself is only at the floor there). Honest prior for Phase-2 Winner ~55%.",
+  "budget_estimate_gpu_h": 27, "cost_note": "SKU 3 x 3.7 h (assigner-heavy), VisDrone 3 x 2.4 h, VOC 3 x 2.1 h, plus units."
+}
