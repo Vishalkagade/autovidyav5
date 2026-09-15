@@ -264,3 +264,23 @@ file during Phase-0.**
   Confirmation strategy status: VOC no-regression PASS; SKU-110K win leg
   running. evidence: confirm_voc/state/assembly_bandgate.json (+ ins_013,
   exp011). status: active.
+- `ins_020` — claim: the band-gated stride-4 level does NOT transfer to
+  SKU-110K (dense retail shelves, median box ~40 px at 640, 141 boxes per
+  image): mAP50 -0.013 seed-avg (floor 0.0016; -0.0056/-0.0123/-0.0212),
+  per-image F1 -0.0144 with CI [-0.0154,-0.0133] on 2,935 units, worse on
+  every seed. Pre-registered WIN bar FAILED on both clauses, so exp011
+  stays "a VisDrone Winner with no VOC regression", not a model
+  improvement. Measured: the band is uninformative on SKU — it covers
+  21-22% of GT centres of every size (random budget: 25%), as on VOC — but
+  unlike VOC the gated level is not inert: medium-object recall@.25 falls
+  -0.04/-0.07/-0.07, precision and recall both drop, and the training-time
+  val curve sits below the baseline from the first epochs (0.883/0.874/
+  0.866 vs 0.888 at the end), so the loss is in training, not at the
+  operating point. The switch is therefore not free: where the first
+  stage is already decided, the live quarter of the stride-4 level still
+  competes in the one-to-one assignment, and on shelves with ~141 medium
+  objects per image that competition costs recall. Whether the cost is
+  the 4-level topology itself or the gating is the open question the SKU
+  diagnostic (ungated exp001 level, prereg_diag.json) answers. evidence:
+  confirm_sku/state/assembly_bandgate.json (+ ins_019, exp011). status:
+  active.

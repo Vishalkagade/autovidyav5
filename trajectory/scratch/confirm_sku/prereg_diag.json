@@ -1,0 +1,12 @@
+{
+  "track": "SKU-110K diagnostic after the WIN-leg FAIL of exp011's band-gated level: is the loss the 4-level topology or the band gating?",
+  "written": "2026-09-15 02:55 — BEFORE any SKU number for the ungated P2 level exists",
+  "design": "variant 'mech' = exp001's ungated yolo26n-p2-sku topology (same s2=60 epochs, seeds 42/123/7, sequential), per-unit F1 on the same 2,935 units, assembled against the same baseline legs (assembly.json).",
+  "readings": {
+    "ungated_also_regresses": "mech seed-avg mAP50 delta <= -1x floor AND per-unit CI < 0: the stride-4 decision level itself hurts on dense medium-object shelves (assignment competition from 25,600 extra anchors), band or no band; exp011's SKU loss is inherited from the topology, and the band's role there is neutral-to-harmful.",
+    "ungated_fine_or_wins": "mech within noise or positive: the band gating is what hurts on SKU (masking a level the assigner still targets), i.e. the mechanism's switch mis-fires on dense medium objects.",
+    "undetermined": "mixed seeds."
+  },
+  "budget_estimate_gpu_h": 11,
+  "note": "diagnostic, not a confirmation leg: it changes the write-up's mechanism account, not exp011's classification (Winner on VisDrone; VOC no-regression PASS; SKU-110K win FAIL)."
+}

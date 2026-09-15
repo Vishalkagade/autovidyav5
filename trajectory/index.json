@@ -273,10 +273,20 @@
         "baseline_legs": "reused from exp001's leg"
       },
       "sku110k": {
-        "verdict": "running since 2026-09-14 08:28 (probe -> baseline x3 -> bandgate x3)",
+        "verdict": "WIN FAIL (both clauses); significant regression",
+        "seedavg_delta_map50": -0.013,
+        "sku_floor": 0.0016,
+        "per_unit_ci95": [
+          -0.0154,
+          -0.0133
+        ],
+        "wilcoxon_p": 4.3836548064706877e-163,
+        "record": "trajectory/scratch/confirm_sku/state/assembly_bandgate.json",
         "prereg": "trajectory/scratch/confirm_sku/prereg.json",
-        "record": "trajectory/scratch/confirm_sku/state/assembly_bandgate.json"
-      }
+        "gpu_h": 17.5,
+        "diagnostic": "ungated P2 level on SKU running (prereg_diag.json) -> state/assembly.json"
+      },
+      "claim": "a VisDrone Winner (cross-domain mechanism); no regression on VOC; NOT a model-improvement claim (SKU-110K win leg failed)"
     }
   },
   "saturated_pairs": [

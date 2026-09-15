@@ -58,3 +58,10 @@ seed,stage,gpu_hours,cumulative
 42,voc_bandgate,2.110,120.504
 123,voc_bandgate,2.114,122.618
 7,voc_bandgate,2.113,124.730
+42,sku_probe,3.333,128.063
+42,sku_baseline,0.978,129.041
+123,sku_baseline,0.981,130.022
+7,sku_baseline,0.984,131.006
+42,sku_bandgate,3.722,134.728
+123,sku_bandgate,3.724,138.452
+7,sku_bandgate,3.726,142.178
