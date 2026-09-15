@@ -314,3 +314,24 @@ file during Phase-0.**
   a dense scene. A refinement of the RULE (not the level) is the natural
   next step; not started (user decision pending 2026-09-15). evidence:
   confirm_sku/state/assembly.json (+ ins_018-020). status: active.
+- `ins_022` — claim: the band-gated level's loss on dense medium-object
+  data is an ASSIGNMENT-OWNERSHIP dynamic, not a selection-rule property.
+  Three selection rules on SKU-110K — the anchor's top-q (1,600 cells per
+  image), a size-clause band (1,594) and an absolute two-sided band (295)
+  — lose the same ~0.005 mAP50 at seed 42 (-0.0056/-0.0047/-0.0047), while
+  the ungated level (all 6,400 cells always live) is neutral (+0.0002).
+  Level-off test (stride-4 anchors fully masked at inference, same
+  checkpoints): absband 0.9007 -> 0.8465 (-0.054), anchor 0.8998 ->
+  0.8749 (-0.025): the gated models' stride-8 heads have ceded products to
+  the stride-4 level wherever the band sits, although only 5-25% of the
+  stride-4 anchors are ever live; the 295-cell band even emits 14.5% of
+  all detections. Mechanism: the band is placed where the stride-8
+  posterior is undecided; a live stride-4 anchor there wins the one-to-one
+  assignment for the product, the stride-8 anchor is trained as its
+  negative and stays undecided, so the cell stays in the band — a
+  self-reinforcing hand-over. At inference recall then depends on band
+  membership reproducing; on VisDrone it does (sub-cell objects are always
+  undecided at stride 8), on shelves it does not. The refinement axis is
+  therefore R3-coupling: which level may OWN an object in the assignment,
+  not which cells take a second look. evidence: exp012, exp013, level-off
+  test (trajectory/experiments/exp013.json), ins_021. status: active.

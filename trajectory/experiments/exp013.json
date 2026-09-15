@@ -1,0 +1,146 @@
+{
+  "id": "exp013",
+  "phase": "phase-2",
+  "adapter_name": "yolo26n_visdrone_scratch",
+  "boldness": "bold",
+  "retry_of": "exp012",
+  "retry_reason": "Single diagnosable flaw in exp012: the selection budget is a RANK (top-q of eligible cells). Any exclusion clause (decided, size) is back-filled by the next-ranked cells, and on dense scenes those are background cells whose stage-1 box head predicts small sides trivially (39% of SKU stride-8 cells): exp012 still selected 1,594/1,600 cells per image and the stride-4 level still emitted 9% of detections (D1 failed). Correction (one change): an ABSOLUTE lower bound b_lo on the stage-1 objectness \u2014 a cell is 'undecided' only if b_lo <= o < B_hi (Wald's two-sided band, not a rank); q stays as a cap; the size clause stays. b_lo = 1e-3 is pre-registered from the rule 'the largest decade that keeps >= 80% of VisDrone small-GT cells eligible', measured on 200 TRAINING images with the anchor checkpoint: small-GT cells >= 1e-3: VisDrone 86.7% (SKU 67%); background cells >= 1e-3: VisDrone 2.9%, SKU 5.3% (vs 100% eligible under a rank). Predicted direction: SKU selected cells per image drop from ~1,600 to a few hundred and the stride-4 detection fraction below 0.02 (D1); VisDrone small-GT coverage stays >= 0.80 (D2); SKU mAP50 within 2x floor of baseline.",
+  "mechanism": {
+    "name": "Absolute SPRT band with size clause: a stride-8 cell takes the stride-4 second sample only if b_lo <= objectness < B_hi AND stage 1's predicted box side < 32 px; top-q cap; empty slots otherwise",
+    "source_domain": "sequential_analysis (Wald 1945): a further sample is taken only where it is informative",
+    "kind": "site_wrap",
+    "family": "sequential-evidence",
+    "site": "head.detect (4-level yolo26-p2 topology)",
+    "params_count": 10652
+  },
+  "cites_baseline_finding_ids": [
+    "fm_small_gt_missed",
+    "fm_dense_scene_f1_collapse"
+  ],
+  "novelty_audit": {
+    "nearest_cv_analog": "QueryDet (sparse high-res queries where a small-object query head fires); scale-aware routing in dynamic-resolution detectors",
+    "mechanism_of_difference": "No extra head or loss: the decision to resample reads stage 1's OWN posterior (undecided band) and its OWN size estimate (box head); versus the anchor the only change is the size clause, which turns the level off where the first stage sees a large object.",
+    "regime_argument": "The anchor's loss on SKU-110K is the gating firing on ~40-px products (ins_020/021); the gain on VisDrone is on ~8-px objects (88% of small GT in the band). A size clause at the COCO-small boundary separates the two regimes with a quantity stage 1 already computes.",
+    "nearest_cv_block": "QueryDet (sparse high-res queries where a small-object query head fires); scale-aware routing in dynamic-resolution detectors",
+    "structural_difference": "No extra head or loss: the decision to resample reads stage 1's OWN posterior (undecided band) and its OWN size estimate (box head); versus the anchor the only change is the size clause, which turns the level off where the first stage sees a large object."
+  },
+  "stages_run": [
+    "S2"
+  ],
+  "metrics_per_stage_per_seed": {
+    "S2": {
+      "42": {
+        "primary": 0.9006989310182199,
+        "secondary": {
+          "mAP50_95": 0.5715752866792531,
+          "precision": 0.8898163969693915,
+          "recall": 0.8230050136873898
+        }
+      }
+    }
+  },
+  "stage1_curve": {
+    "42": [
+      0.10898,
+      0.49439,
+      0.46802,
+      0.71216,
+      0.74447,
+      0.79023,
+      0.80325,
+      0.81961,
+      0.82659,
+      0.82954,
+      0.8341,
+      0.83895,
+      0.8471,
+      0.84992,
+      0.85285,
+      0.85742,
+      0.85606,
+      0.85755,
+      0.86233,
+      0.86423,
+      0.86473,
+      0.86248,
+      0.86679,
+      0.87196,
+      0.87147,
+      0.87067,
+      0.87103,
+      0.8732,
+      0.87486,
+      0.87516,
+      0.87523,
+      0.87661,
+      0.87846,
+      0.87714,
+      0.87803,
+      0.87792,
+      0.87906,
+      0.87802,
+      0.87816,
+      0.87977,
+      0.88038,
+      0.88077,
+      0.88017,
+      0.88262,
+      0.88265,
+      0.88273,
+      0.88286,
+      0.88315,
+      0.88247,
+      0.88352,
+      0.88274,
+      0.88423,
+      0.88423,
+      0.88482,
+      0.88465,
+      0.88497,
+      0.88507,
+      0.88469,
+      0.8855,
+      0.88553
+    ]
+  },
+  "provenance": {
+    "git_commit": "e002b4a9641e54dac663ed61fc083a3edeb8c28e",
+    "data_manifest_sha256": "f720015b70cde4734bcf12713d6e0bce99e5b45eec18798871a35523311c9f87",
+    "ultralytics_commit": "b10fa7be231820cea668c52af45b25d07ff65968"
+  },
+  "created_at": "2026-09-15T22:09:50+00:00",
+  "classification": "Kill",
+  "attribution": {
+    "type": "scientific",
+    "subtype": "screened-out",
+    "evidence": "Phase-2 P4 retry of exp012 (axis R1-formula, anchor exp011), SKU-110K seed-42 screen: absband mAP50 0.9007 vs baseline 0.9054 (delta -0.0047, bar -0.0032) -> KILL; anchor 0.8998. D0 PASSED (295 selected cells/image, bar 800: the absolute band did shrink the band); D1 FAILED: the stride-4 level emits 14.5% of detections at conf .25 (anchor 10.6%, bar 0.02) from those 295 cells. Level-off test on the trained checkpoints (stride-4 fully masked at inference): absband 0.9007 -> 0.8465 (-0.054), anchor 0.8998 -> 0.8749 (-0.025), i.e. the gated models' stride-8 heads have CEDED products to the stride-4 level wherever the band sits, and recall then depends on band membership reproducing at inference. Three gatings (1600/1594/295 cells) lose the same ~0.005; the ungated level (all anchors always live) is neutral. The loss is an assignment-ownership dynamic, not a selection-rule property: R1-formula closed (P5)."
+  },
+  "discriminator": {
+    "statement": "selected cells per image on SKU-110K < 800 (half the cap) on every seed \u2014 the absolute band must actually shrink the band on dense scenes | fraction of detections at conf .25 from the stride-4 level on SKU-110K must fall below 0.02 (anchor: 0.10) on every seed \u2014 the size clause must actually switch the level off there",
+    "by_seed": {
+      "42": {
+        "D0_selected_cells_per_image": 295,
+        "D0_pass": true,
+        "D1_frac_detections_from_stride4_sku": 0.145,
+        "D1_pass": false,
+        "band_coverage": {
+          "small": {
+            "covered": 0.5317157837642379,
+            "n": 138275
+          },
+          "medium": {
+            "covered": 0.018277705533882388,
+            "n": 290682
+          },
+          "large": {
+            "covered": 0.016653127538586516,
+            "n": 2462
+          }
+        }
+      }
+    },
+    "pass": false
+  },
+  "cost_gpu_hours": 3.73,
+  "notes": "P5 fires: exp012 and exp013 are two consecutive scientific failures on axis R1-formula for anchor exp011 -> axis closed. Next axis by the tournament bench: R3-coupling (assignment ownership). Level-off numbers: trajectory/scratch/phase2 (ins_022)."
+}
