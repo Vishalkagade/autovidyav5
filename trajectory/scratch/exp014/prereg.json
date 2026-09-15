@@ -1,0 +1,61 @@
+{
+  "exp": "exp014",
+  "phase": "phase-2",
+  "axis": "R3-coupling",
+  "anchor": "exp011",
+  "written": "2026-09-16 00:55 \u2014 BEFORE any number for the scale-owned assignment exists",
+  "targets_anchor_profile_fields": [
+    "sku110k.failure_account",
+    "sku110k.ungated_level_diagnostic",
+    "visdrone.gt_by_cell_state"
+  ],
+  "cites_insights": [
+    "ins_021",
+    "ins_022"
+  ],
+  "mechanism": {
+    "name": "Band-gated stride-4 level with scale-owned assignment: stride-4 anchors may own (be assigned) only ground truth with longer side < 32 px; selection rule unchanged (anchor's top-q band, q=0.25, B_hi=0.5)",
+    "kind": "site_wrap + training coupling",
+    "site": "head.detect (4-level yolo26-p2 topology) + loss assigner",
+    "module": "adapters.yolo26n_visdrone_scratch.modules.scaleowned (own_thr=32) on top of bandgate",
+    "family": "sequential-evidence",
+    "params_added_measured": 10652,
+    "params_added_vs_anchor": 0,
+    "own_thr_px": 32.0,
+    "source_domain": "sequential_analysis (Wald 1945) for the band; the ownership constraint is the SPRT's 'the second sample decides only what the first could not'"
+  },
+  "novelty_audit": {
+    "nearest_cv_analog": "per-level scale ranges in FCOS/ATSS-style assignment; QueryDet",
+    "mechanism_of_difference": "The constraint is applied only to the GATED level and only as ownership in the task-aligned assignment (stride-8+ anchors keep every object they can decide; stride 4 may own only sub-cell objects), leaving the selection rule and all other levels' assignment untouched; it exists to break the measured hand-over dynamic (ins_022), not to route scales.",
+    "regime_argument": "ins_022: the anchor's loss on dense medium objects is the stride-8 head ceding products to live stride-4 anchors; forbidding stride 4 from owning objects the stride-8 grid can decide removes the dynamic without touching where the second look is taken."
+  },
+  "datasets_in_order": [
+    "sku110k",
+    "visdrone",
+    "voc"
+  ],
+  "bars": {
+    "sku110k": {
+      "screen_seed42": "PROMOTE iff mAP50(seed 42) >= baseline(seed 42) - 2x SKU floor (0.0016); else KILL",
+      "no_regression_vs_baseline": "seed-avg mAP50 >= baseline - 1x floor AND per-unit vs baseline not significantly unfavorable",
+      "vs_anchor": "P10 per-unit refinement vs anchor: pass (CI > 0) with every seed positive \u2014 REQUIRED",
+      "win_vs_baseline": "recorded if it happens; not required"
+    },
+    "visdrone": {
+      "no_regression_vs_anchor": "seed-avg mAP50 >= anchor - 1x VisDrone floor (0.00497) AND per-unit vs anchor CI not entirely below 0",
+      "vs_baseline": "must still pass P10 vs baseline"
+    },
+    "voc": {
+      "no_regression_vs_baseline": "the prereg_exp011.json bar"
+    }
+  },
+  "discriminators": {
+    "D1_ownership_tripwire": "stride-4 positives on GT >= 32 px == 0 on every training batch (stats.pos_small_level_on_large_gt), stride-4 positives on small GT > 0",
+    "D2_level_off_drop_sku": "stride-4 level fully masked at inference costs <= 0.005 mAP50 on SKU (anchor -0.025, absband -0.054): ownership is no longer ceded",
+    "D3_band_kept_on_visdrone": "small-GT band coverage on VisDrone >= 0.80 on every seed",
+    "on_fail": "classify from the bars; a discriminator failure means the account is wrong even if a bar passes"
+  },
+  "classification": "Phase-2 Winner iff all three datasets pass (program.md Phase-2); Hold if direction-consistent but a per-unit test fails; Reject/Kill otherwise. P11 sealed seeds on VisDrone if Winner.",
+  "expected_verdict_prior": "SKU back to baseline (no loss) ~65% (a small WIN from the 28-36% of products under 32 px ~20%); VisDrone unchanged ~70% (risk: medium objects lose the stride-4 option); Phase-2 Winner ~45%.",
+  "budget_estimate_gpu_h": 27
+}
