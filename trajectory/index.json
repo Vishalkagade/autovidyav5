@@ -284,7 +284,14 @@
         "record": "trajectory/scratch/confirm_sku/state/assembly_bandgate.json",
         "prereg": "trajectory/scratch/confirm_sku/prereg.json",
         "gpu_h": 17.5,
-        "diagnostic": "ungated P2 level on SKU running (prereg_diag.json) -> state/assembly.json"
+        "diagnostic": {
+          "question": "topology or gating?",
+          "answer": "gating: ungated P2 level +0.0016 mAP50 / per-unit CI [+0.0010,+0.0025] on the same seeds and baselines",
+          "record": "trajectory/scratch/confirm_sku/state/assembly.json",
+          "prereg": "trajectory/scratch/confirm_sku/prereg_diag.json",
+          "insight": "ins_021",
+          "gpu_h": 11.2
+        }
       },
       "claim": "a VisDrone Winner (cross-domain mechanism); no regression on VOC; NOT a model-improvement claim (SKU-110K win leg failed)"
     }

@@ -1,0 +1,103 @@
+{
+  "baseline_map50_by_seed": {
+    "42": 0.9053701796727937,
+    "123": 0.9037649675464763,
+    "7": 0.9048570333095218
+  },
+  "mech_map50_by_seed": {
+    "42": 0.9055954777890091,
+    "123": 0.9072983864983121,
+    "7": 0.9060238594996315
+  },
+  "s2_noise_floor": 0.001605212126317368,
+  "seedavg_delta_map50": 0.0016418477527202862,
+  "per_unit": {
+    "n_units": 2935,
+    "mean_diff": 0.0017726526226057846,
+    "ci95": [
+      0.00101077158368979,
+      0.002526454237608995
+    ],
+    "wilcoxon_p": 1.8272180469642878e-13,
+    "per_seed_means": {
+      "7": 0.0008787602310155263,
+      "42": 0.0005158589042603752,
+      "123": 0.003923338732541452
+    }
+  },
+  "mech_variant": "mech",
+  "per_scale_recall": {
+    "42": {
+      "baseline": {
+        "small_recall": 0.2277992277992278,
+        "medium_recall": 0.6119053675909438,
+        "large_recall": 0.9000627340106335,
+        "skipped_unreadable": [
+          "test_274.jpg"
+        ]
+      },
+      "mech": {
+        "small_recall": 0.2335907335907336,
+        "medium_recall": 0.6059654032052912,
+        "large_recall": 0.8984191597048947,
+        "skipped_unreadable": [
+          "test_274.jpg"
+        ]
+      }
+    },
+    "123": {
+      "baseline": {
+        "small_recall": 0.23166023166023167,
+        "medium_recall": 0.613037395064869,
+        "large_recall": 0.8993246868267094,
+        "skipped_unreadable": [
+          "test_274.jpg"
+        ]
+      },
+      "mech": {
+        "small_recall": 0.22972972972972974,
+        "medium_recall": 0.6010811498346477,
+        "large_recall": 0.9020724932653195,
+        "skipped_unreadable": [
+          "test_274.jpg"
+        ]
+      }
+    },
+    "7": {
+      "baseline": {
+        "small_recall": 0.2335907335907336,
+        "medium_recall": 0.617374713813279,
+        "large_recall": 0.9025834490080362,
+        "skipped_unreadable": [
+          "test_274.jpg"
+        ]
+      },
+      "mech": {
+        "small_recall": 0.21042471042471042,
+        "medium_recall": 0.6157211905367591,
+        "large_recall": 0.9018964973983836,
+        "skipped_unreadable": [
+          "test_274.jpg"
+        ]
+      }
+    }
+  },
+  "bar_a_map50": true,
+  "bar_b_per_unit_not_sig_unfavorable": true,
+  "wall_min": {
+    "baseline": [
+      58.685757740338644,
+      58.83770255645116,
+      59.02239814201991
+    ],
+    "mech": [
+      223.17240571975708,
+      224.62209275166194,
+      223.63444855213166
+    ]
+  },
+  "win_a_map50_ge_floor": true,
+  "win_b_per_unit_pass_every_seed_positive": true,
+  "WIN_PASS": true,
+  "NO_REGRESSION_PASS": true
+}

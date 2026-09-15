@@ -65,3 +65,6 @@ seed,stage,gpu_hours,cumulative
 42,sku_bandgate,3.722,134.728
 123,sku_bandgate,3.724,138.452
 7,sku_bandgate,3.726,142.178
+42,sku_ungated_diag,3.720,145.898
+123,sku_ungated_diag,3.744,149.641
+7,sku_ungated_diag,3.727,153.368

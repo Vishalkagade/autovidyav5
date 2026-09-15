@@ -296,3 +296,21 @@ file during Phase-0.**
   diagnostic (ungated exp001 level, prereg_diag.json) answers. evidence:
   confirm_sku/state/assembly_bandgate.json (+ ins_019, exp011). status:
   active.
+- `ins_021` — claim: on SKU-110K the harm is the GATING, not the stride-4
+  level: exp001's ungated level (same yolo26-p2 topology, same seeds and
+  baselines, pre-registered diagnostic) is neutral-to-positive — mAP50
+  +0.0016 seed-avg (floor 0.0016; seeds +0.0002/+0.0035/+0.0012),
+  per-image F1 +0.0018 with CI [+0.0010,+0.0025] (every seed positive)
+  — where the band-gated level lost -0.013 / -0.0144 (ins_020). So the
+  4-level topology is harmless on dense medium-object shelves and the
+  switch is what costs: selecting a quarter of the cells by the stride-8
+  posterior, when the posterior has already decided half the products,
+  puts live stride-4 anchors next to decided stride-8 anchors and the
+  one-to-one targets flip between levels as the selection moves during
+  training. Together with ins_019 (VOC: level inert, band harmless) and
+  ins_018 (VisDrone: band = the mechanism), the band is a switch whose
+  rule is right where coarse-grid uncertainty tracks the small objects
+  (sparse aerial scenes) and wrong where the coarse grid is confident on
+  a dense scene. A refinement of the RULE (not the level) is the natural
+  next step; not started (user decision pending 2026-09-15). evidence:
+  confirm_sku/state/assembly.json (+ ins_018-020). status: active.
