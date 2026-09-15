@@ -55,9 +55,12 @@ def per_unit_and_scale(weights):
     from ultralytics import YOLO
     m = YOLO(weights); imgs = sorted(l.strip() for l in open(_yaml.safe_load(open(DATA))["val"]) if l.strip())
     units = []; matched = {"small": 0, "medium": 0, "large": 0}; total = dict(matched)
-    det = m.model.model[-1]; gated = type(det).__name__ == "BandGatedDetect"; cov = {"small": [0, 0], "medium": [0, 0], "large": [0, 0]}
+    det = m.model.model[-1]; gated = type(det).__name__ == "BandGatedDetect"; cov = {"small": [0, 0], "medium": [0, 0], "large": [0, 0]}; skipped = []
     for p in imgs:
-        r = m.predict(p, imgsz=640, conf=0.25, verbose=False, device=0)[0]; gt = _gt(p)
+        try: r = m.predict(p, imgsz=640, conf=0.25, verbose=False, device=0)[0]
+        except ValueError as e:   # truncated JPEG (SKU-110K test_274.jpg): the validator's scanner ignores it too, so the unit set is the validator's
+            skipped.append(os.path.basename(p)); continue
+        gt = _gt(p)
         if gated:   # band coverage of GT centres (input scale; letterbox to 640, cell = stride-8 index)
             from PIL import Image
             w0, h0 = Image.open(p).size; rr = min(640 / h0, 640 / w0); px, py = (640 - round(w0 * rr)) / 2, (640 - round(h0 * rr)) / 2; sel = set(det.last_sel[0].tolist())
@@ -72,6 +75,7 @@ def per_unit_and_scale(weights):
                 b = _area_bucket((x2 - x1) * (y2 - y1)); total[b] += 1; matched[b] += j in mi
     ps = {f"{b}_recall": matched[b] / total[b] if total[b] else 0.0 for b in total}
     if gated: ps["band_coverage"] = {k: {"covered": v[0] / max(1, v[1]), "n": v[1]} for k, v in cov.items()}
+    ps["skipped_unreadable"] = skipped
     return units, ps
 def cmd_probe(_):
     r = train("baseline", 200, 42, "sku_probe_baseline_seed42"); r["budgets"] = pick_budgets(r["curve_val500_map50"]); r["min_per_epoch"] = r["wall_min"] / 200; _w("probe.json", r); print("[sku] budgets", r["budgets"])

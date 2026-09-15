@@ -10,7 +10,8 @@
     "n": 2936,
     "sha256": "0a8a56d0b374536225639ed07369903fd3f9dbc616db450f25f0b926bd582570",
     "labels_sha256": "35e3208e5c612b0303db1459e343dce9b0d5804624ecbd038790a871140b2fab",
-    "definition": "SKU-110K test split (frozen; one pass on last.pt per run)"
+    "definition": "SKU-110K test split (frozen; one pass on last.pt per run)",
+    "note": "test_274.jpg is a truncated JPEG: ignored by the ultralytics validator scan (1 corrupt) and skipped by the per-unit metric, so both metrics use 2,935 units"
   },
   "val": {
     "n": 588,
