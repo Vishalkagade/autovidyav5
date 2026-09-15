@@ -5,20 +5,21 @@ import argparse, csv, json, os, sys, time, statistics
 P = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")); sys.path.insert(0, P); os.chdir(P)
 HERE = os.path.join(P, "trajectory", "scratch", "confirm_sku"); ST = os.path.join(HERE, "state"); os.makedirs(ST, exist_ok=True)
 CFG = os.path.join(P, "adapters", "yolo26n_visdrone_scratch", "configs")
-YAML = {"baseline": os.path.join(CFG, "yolo26n-sku.yaml"), "mech": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "bandgate": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "sizeband": os.path.join(CFG, "yolo26n-p2-sku.yaml")}
-STRIDES = {"baseline": [8, 16, 32], "mech": [4, 8, 16, 32], "bandgate": [4, 8, 16, 32], "sizeband": [4, 8, 16, 32]}
-VARIANTS = ("baseline", "mech", "bandgate", "sizeband")   # bandgate = exp011 anchor; sizeband = exp012 (size-aware band, size_thr from its prereg); both via the SurgeryTrainer pattern
+YAML = {"baseline": os.path.join(CFG, "yolo26n-sku.yaml"), "mech": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "bandgate": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "sizeband": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "absband": os.path.join(CFG, "yolo26n-p2-sku.yaml")}
+STRIDES = {"baseline": [8, 16, 32], "mech": [4, 8, 16, 32], "bandgate": [4, 8, 16, 32], "sizeband": [4, 8, 16, 32], "absband": [4, 8, 16, 32]}
+VARIANTS = ("baseline", "mech", "bandgate", "sizeband", "absband")   # bandgate = exp011 anchor; sizeband = exp012 (size-aware band, size_thr from its prereg); both via the SurgeryTrainer pattern
 SIZE_THR = json.load(open(os.path.join(P, "trajectory", "scratch", "exp012", "prereg.json")))["mechanism"]["size_thr_px"]
-GATED = {"bandgate": None, "sizeband": SIZE_THR}   # variant -> size_thr
+B_LO = json.load(open(os.path.join(P, "trajectory", "scratch", "exp013", "prereg.json")))["mechanism"]["b_lo"]
+GATED = {"bandgate": (None, None), "sizeband": (SIZE_THR, None), "absband": (SIZE_THR, B_LO)}   # variant -> (size_thr, b_lo)
 from adapters.yolo26n_visdrone_scratch.modules import bandgate as BG
 from adapters.yolo26n_visdrone_scratch.modules import chunked_assigner; chunked_assigner.apply()   # SKU-110K density OOMs the assigner every batch with the 4-level head
 BG_PREREG = json.load(open(os.path.join(P, "trajectory", "scratch", "exp011", "prereg.json")))["mechanism"]
-def _bg_ok(net, variant="bandgate"): i = BG.surgery_present(net); return i["class"] == "BandGatedDetect" and i["selection"] == "band" and i["strides"] == [4.0, 8.0, 16.0, 32.0] and i["size_thr"] == GATED[variant]
+def _bg_ok(net, variant="bandgate"): i = BG.surgery_present(net); return i["class"] == "BandGatedDetect" and i["selection"] == "band" and i["strides"] == [4.0, 8.0, 16.0, 32.0] and (i["size_thr"], i["b_lo"]) == GATED[variant]
 def _make_trainer(seed, variant="bandgate"):
     from ultralytics.models.yolo.detect import DetectionTrainer
     class SurgeryTrainer(DetectionTrainer):
         def get_model(self, cfg=None, weights=None, verbose=True):
-            m = super().get_model(cfg=cfg, weights=weights, verbose=verbose); BG.apply_surgery(m, "band", q=BG_PREREG["q"], b_hi=BG_PREREG["b_hi"], seed=seed, size_thr=GATED[variant]); assert _bg_ok(m, variant); return m
+            m = super().get_model(cfg=cfg, weights=weights, verbose=verbose); BG.apply_surgery(m, "band", q=BG_PREREG["q"], b_hi=BG_PREREG["b_hi"], seed=seed, size_thr=GATED[variant][0], b_lo=GATED[variant][1]); assert _bg_ok(m, variant); return m
     return SurgeryTrainer
 def _check_cb(variant):
     def cb(tr): assert _bg_ok(tr.model, variant) and (tr.ema is None or _bg_ok(tr.ema.ema, variant)), "bandgate surgery missing before epoch 1"
@@ -141,7 +142,7 @@ def cmd_assemble(a):
     if ref != "baseline": out["floor_note"] = f"floor here = max-min over the {ref} seeds (reference variant), not the baseline floor"
     _w(("assembly.json" if mv == "mech" else f"assembly_{mv}.json") if ref == "baseline" else f"assembly_{mv}_vs_{ref}.json", out); print("[sku] WIN", "PASS" if out["WIN_PASS"] else "FAIL", f"{mv} vs {ref}", {k: out[k] for k in ("seedavg_delta_map50", "s2_noise_floor")}, out["per_unit"]["ci95"])
 def main():
-    p = argparse.ArgumentParser(); sub = p.add_subparsers(dest="cmd", required=True); sub.add_parser("probe"); asm = sub.add_parser("assemble"); asm.add_argument("--mech-variant", choices=["mech", "bandgate", "sizeband"], default="mech"); asm.add_argument("--ref", choices=["baseline", "bandgate", "mech"], default="baseline")
+    p = argparse.ArgumentParser(); sub = p.add_subparsers(dest="cmd", required=True); sub.add_parser("probe"); asm = sub.add_parser("assemble"); asm.add_argument("--mech-variant", choices=["mech", "bandgate", "sizeband", "absband"], default="mech"); asm.add_argument("--ref", choices=["baseline", "bandgate", "mech"], default="baseline")
     s = sub.add_parser("stage"); s.add_argument("--variant", choices=VARIANTS, required=True); s.add_argument("--seed", type=int, required=True)
     fi = sub.add_parser("finish"); fi.add_argument("--variant", choices=VARIANTS, required=True); fi.add_argument("--seed", type=int, required=True)
     u = sub.add_parser("units"); u.add_argument("--variant", choices=VARIANTS, required=True); u.add_argument("--seed", type=int, required=True); u.add_argument("--weights", required=True)

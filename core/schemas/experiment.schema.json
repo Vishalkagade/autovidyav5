@@ -53,7 +53,7 @@
       "pattern": "^exp[0-9]{3,}$",
       "description": "e.g. 'exp001'."
     },
-    "phase": { "enum": ["phase-0", "phase-1"] },
+    "phase": { "enum": ["phase-0", "phase-1", "phase-2"] },
     "adapter_name": { "type": "string" },
     "mechanism": {
       "type": "object",

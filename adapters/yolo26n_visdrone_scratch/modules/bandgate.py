@@ -32,6 +32,7 @@ MASK_LOGIT = -10.0
 class BandGatedDetect(Detect):
     # set by surgery: q, b_hi, selection ('band'|'random'), gen (torch.Generator, CPU); size_thr (exp012, px or None)
     size_thr = None   # class default: exp011 checkpoints predate the knob
+    b_lo = None       # exp013: absolute lower objectness bound (a true two-sided band); None = rank-only (top-q)
 
     def _select(self, scores_l1: torch.Tensor, hw: int, boxes_l1: torch.Tensor = None):
         """scores_l1: (B, nc, h*w) stride-8 one2one logits; boxes_l1: (B, 4, h*w) ltrb in stride units.
@@ -42,6 +43,8 @@ class BandGatedDetect(Detect):
             return sel, torch.ones_like(sel, dtype=torch.bool)
         o = scores_l1.max(1).values.sigmoid()
         o = o.masked_fill(o >= self.b_hi, -1.0)               # decided cells take no second sample
+        if self.b_lo is not None:
+            o = o.masked_fill(o < self.b_lo, -1.0)            # exp013: background-level posteriors are decided-negative, not "undecided"
         if self.size_thr is not None and boxes_l1 is not None:   # exp012: a second sample only where stage 1 says the object is sub-cell
             side = torch.maximum((boxes_l1[:, 0] + boxes_l1[:, 2]).clamp(min=0), (boxes_l1[:, 1] + boxes_l1[:, 3]).clamp(min=0)) * float(self.stride[1])
             o = o.masked_fill(side >= self.size_thr, -1.0)
@@ -79,11 +82,11 @@ class BandGatedDetect(Detect):
         return y if self.export else (y, out)
 
 
-def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5, seed: int = 0, size_thr: float = None) -> int:
+def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5, seed: int = 0, size_thr: float = None, b_lo: float = None) -> int:
     det = det_model.model[-1]; assert type(det).__name__ == "Detect", type(det).__name__
     assert det.nl == 4 and [int(s) for s in det.stride.tolist()] == [4, 8, 16, 32], det.stride
     assert selection in ("band", "random"), selection
-    det.q, det.b_hi, det.selection, det.size_thr = q, b_hi, selection, size_thr
+    det.q, det.b_hi, det.selection, det.size_thr, det.b_lo = q, b_hi, selection, size_thr, b_lo
     det.gen = torch.Generator().manual_seed(seed)
     det.__class__ = BandGatedDetect
     return 0
@@ -92,7 +95,7 @@ def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5,
 def surgery_present(det_model) -> dict:
     det = det_model.model[-1]
     return {"class": type(det).__name__, "selection": getattr(det, "selection", None), "q": getattr(det, "q", None),
-            "strides": [float(s) for s in det.stride.tolist()], "nl": det.nl, "size_thr": getattr(det, "size_thr", None)}
+            "strides": [float(s) for s in det.stride.tolist()], "nl": det.nl, "size_thr": getattr(det, "size_thr", None), "b_lo": getattr(det, "b_lo", None)}
 
 
 def demo() -> None:
@@ -118,6 +121,13 @@ def demo() -> None:
     g3 = sum(float(q_.grad.norm()) for q_ in list(det3.cv2[0].parameters()) + list(det3.cv3[0].parameters()) if q_.grad is not None)
     assert live3 == 0 or g3 > 0, "gradient must reach the stride-4 heads through the live anchors"
     print(f"  size-aware band: live stride-4 anchors {live3:.3f} (q=0.25 cap), stride-4 head grad {g3:.3f}")
+    # absolute band (exp013): with b_lo above every random-init posterior no cell is eligible -> all slots empty, level fully masked, forward still valid
+    m4 = YOLO(yaml).model; apply_surgery(m4, "band", b_lo=0.999); m4.train(); p4 = m4(x)
+    assert (m4.model[-1].last_sel < 0).all() and (p4["one2one"]["boxes"][..., :25600] == 0).all(), "b_lo must be able to empty the band"
+    m4.eval()
+    with torch.no_grad(): y4 = m4(x)
+    y4 = y4[0] if isinstance(y4, tuple) else y4; assert y4.shape == (2, 300, 6) and torch.isfinite(y4).all()
+    print("  absolute band: empty band handled (all stride-4 anchors masked, inference valid)")
     # gradient reaches the stride-4 heads only through live anchors
     m.zero_grad(); (p["one2many"]["scores"][..., :25600].abs().mean() + p["one2many"]["boxes"][..., :25600].abs().mean()).backward()
     g = sum(float(q_.grad.norm()) for q_ in list(m.model[-1].cv2[0].parameters()) + list(m.model[-1].cv3[0].parameters()) if q_.grad is not None); assert g > 0, g

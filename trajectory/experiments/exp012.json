@@ -1,0 +1,143 @@
+{
+  "id": "exp012",
+  "phase": "phase-2",
+  "adapter_name": "yolo26n_visdrone_scratch",
+  "boldness": "bold",
+  "mechanism": {
+    "name": "Size-aware SPRT band: a stride-8 cell takes the stride-4 second sample only if undecided (o < B_hi) AND stage 1's predicted box side < 32 px; top-q among those, empty slots otherwise",
+    "source_domain": "sequential_analysis (Wald 1945): a further sample is taken only where it is informative",
+    "kind": "site_wrap",
+    "family": "sequential-evidence",
+    "site": "head.detect (4-level yolo26-p2 topology)",
+    "params_count": 10652
+  },
+  "cites_baseline_finding_ids": [
+    "fm_small_gt_missed",
+    "fm_dense_scene_f1_collapse"
+  ],
+  "novelty_audit": {
+    "nearest_cv_analog": "QueryDet (sparse high-res queries where a small-object query head fires); scale-aware routing in dynamic-resolution detectors",
+    "mechanism_of_difference": "No extra head or loss: the decision to resample reads stage 1's OWN posterior (undecided band) and its OWN size estimate (box head); versus the anchor the only change is the size clause, which turns the level off where the first stage sees a large object.",
+    "regime_argument": "The anchor's loss on SKU-110K is the gating firing on ~40-px products (ins_020/021); the gain on VisDrone is on ~8-px objects (88% of small GT in the band). A size clause at the COCO-small boundary separates the two regimes with a quantity stage 1 already computes.",
+    "nearest_cv_block": "QueryDet (sparse high-res queries where a small-object query head fires); scale-aware routing in dynamic-resolution detectors",
+    "structural_difference": "No extra head or loss: the decision to resample reads stage 1's OWN posterior (undecided band) and its OWN size estimate (box head); versus the anchor the only change is the size clause, which turns the level off where the first stage sees a large object."
+  },
+  "stages_run": [
+    "S2"
+  ],
+  "metrics_per_stage_per_seed": {
+    "S2": {
+      "42": {
+        "primary": 0.9006802816678248,
+        "secondary": {
+          "mAP50_95": 0.5743451247804484,
+          "precision": 0.8913353998953473,
+          "recall": 0.8219804876465803
+        }
+      }
+    }
+  },
+  "stage1_curve": {
+    "42": [
+      0.01231,
+      0.51752,
+      0.63589,
+      0.71973,
+      0.76394,
+      0.79233,
+      0.80283,
+      0.82318,
+      0.82977,
+      0.83678,
+      0.8382,
+      0.8446,
+      0.84893,
+      0.85008,
+      0.85531,
+      0.8586,
+      0.85767,
+      0.86307,
+      0.86639,
+      0.86537,
+      0.86779,
+      0.86775,
+      0.87189,
+      0.87142,
+      0.87298,
+      0.87362,
+      0.87693,
+      0.87407,
+      0.87578,
+      0.8753,
+      0.87642,
+      0.87778,
+      0.87896,
+      0.87953,
+      0.87986,
+      0.8803,
+      0.88176,
+      0.87979,
+      0.88178,
+      0.88339,
+      0.88308,
+      0.8831,
+      0.88308,
+      0.88343,
+      0.88467,
+      0.88331,
+      0.88225,
+      0.88367,
+      0.8833,
+      0.88387,
+      0.88094,
+      0.88349,
+      0.88339,
+      0.88322,
+      0.88302,
+      0.88347,
+      0.88337,
+      0.88385,
+      0.88363,
+      0.88397
+    ]
+  },
+  "provenance": {
+    "git_commit": "19d6b640134e4c2a8a6d04a3627462c840734e34",
+    "data_manifest_sha256": "f720015b70cde4734bcf12713d6e0bce99e5b45eec18798871a35523311c9f87",
+    "ultralytics_commit": "b10fa7be231820cea668c52af45b25d07ff65968"
+  },
+  "created_at": "2026-09-15T18:09:37+00:00",
+  "classification": "Kill",
+  "attribution": {
+    "type": "scientific",
+    "subtype": "screened-out",
+    "evidence": "Phase-2 refinement (axis R1-formula, anchor exp011), dataset SKU-110K, seed-42 screen: sizeband mAP50 0.9007 vs baseline 0.9054 (delta -0.0047, bar -0.0032) -> KILL; anchor on the same seed 0.8998. Discriminator D1 FAILED: the stride-4 level still emits 9.0% of detections at conf .25 on SKU (anchor 10.6%, bar 0.02) and 1,594 of the 1,600 budgeted cells are still selected per image. Measured cause: 39% of stride-8 cells (background) predict a box side < 32 px, so the size clause is satisfied trivially by background and the rank-based top-q budget refills with it; the band moved from products to background and the loss stayed."
+  },
+  "discriminator": {
+    "statement": "fraction of detections at conf .25 from the stride-4 level on SKU-110K must fall below 0.02 (anchor: 0.10) on every seed \u2014 the size clause must actually switch the level off there | small-GT band coverage on VisDrone >= 0.80 on every seed (anchor 0.88) \u2014 the size clause must not starve the aerial regime",
+    "by_seed": {
+      "42": {
+        "D1_frac_detections_from_stride4_sku": 0.09,
+        "D1_pass": false,
+        "selected_cells_per_image": 1594,
+        "band_coverage": {
+          "small": {
+            "covered": 0.4773024769481107,
+            "n": 138275
+          },
+          "medium": {
+            "covered": 0.020520706476493213,
+            "n": 290682
+          },
+          "large": {
+            "covered": 0.0239642567018684,
+            "n": 2462
+          }
+        }
+      }
+    },
+    "pass": false
+  },
+  "cost_gpu_hours": 3.73,
+  "notes": "Phase-2 experiment (program.md Phase-2; control = anchor). Prereg trajectory/scratch/exp012/prereg.json; tournament exp012/tournament.md. Single diagnosable flaw (P4): the selection budget is a RANK (top-q), so any clause that excludes cells is back-filled by the next-ranked cells, which on dense scenes are background; correction = an absolute lower objectness bound b_lo (a true two-sided SPRT band), retry = exp013. Schema: 'phase-2' added to the phase enum under the user's Phase-2 decision (2026-09-15)."
+}
