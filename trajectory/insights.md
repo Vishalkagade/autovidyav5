@@ -254,29 +254,41 @@ file during Phase-0.**
   (floor 0.0085; seeds -0.0002/-0.0079/-0.0030) and per-image F1 -0.0021
   with CI [-0.0059,+0.0017] (p 0.46), where exp001's ungated level failed
   it (-0.0063; F1 -0.0050, CI [-0.0090,-0.0010], ins_013). Mechanism of
-  the difference, measured: on VOC the band covers 20-21% of medium and
-  large GT centres (n=2,002 / 9,947) — below the 25% a random budget would,
-  i.e. the stride-8 posterior is already decided on the objects and the
-  band sits on background — so the gated level is inert there, while on
-  VisDrone the same rule covers 88% of small GT centres. The band is a
-  data-adaptive switch: it spends the stride-4 decision where the first
-  stage is uncertain and withholds it where the first stage is not.
+  the difference, measured (CORRECTED 2026-09-15: the first write-up used
+  predict's rectangular grid to index cells and reported ~21% coverage;
+  the square-grid recomputation is in the per-unit files): on VOC the
+  band does land on the objects — 62-70% of medium and 42-46% of large GT
+  centres (n=2,002 / 9,947), with only ~0.003% of cells "decided" at B_hi
+  — yet the gated stride-4 level emits <1% of the detections at conf .25
+  (anchor_analysis.json), i.e. it is inert because the one-to-one
+  assignment gives large objects to the stride-8/16/32 anchors, not
+  because the band withholds it. On VisDrone the same rule covers 88% of
+  small GT centres and the level emits 44% of the detections. The band
+  is a data-adaptive switch in effect, not by gating alone: it spends the
+  stride-4 decision where the first stage is uncertain, and where objects
+  are large the level has nothing to win in the assignment.
   Confirmation strategy status: VOC no-regression PASS; SKU-110K win leg
   running. evidence: confirm_voc/state/assembly_bandgate.json (+ ins_013,
   exp011). status: active.
-- `ins_020` — claim: the band-gated stride-4 level does NOT transfer to
-  SKU-110K (dense retail shelves, median box ~40 px at 640, 141 boxes per
-  image): mAP50 -0.013 seed-avg (floor 0.0016; -0.0056/-0.0123/-0.0212),
-  per-image F1 -0.0144 with CI [-0.0154,-0.0133] on 2,935 units, worse on
-  every seed. Pre-registered WIN bar FAILED on both clauses, so exp011
-  stays "a VisDrone Winner with no VOC regression", not a model
-  improvement. Measured: the band is uninformative on SKU — it covers
-  21-22% of GT centres of every size (random budget: 25%), as on VOC — but
-  unlike VOC the gated level is not inert: medium-object recall@.25 falls
-  -0.04/-0.07/-0.07, precision and recall both drop, and the training-time
-  val curve sits below the baseline from the first epochs (0.883/0.874/
-  0.866 vs 0.888 at the end), so the loss is in training, not at the
-  operating point. The switch is therefore not free: where the first
+- `ins_020` — claim: thMeasured (square-grid coverage, corrected 2026-09-15;
+  the first write-up's "21%, below random" figure came from a rectangular-
+  grid indexing error): on SKU the coarse grid is already DECIDED (o >=
+  B_hi) on 52% of medium and 29% of small product centres — the only
+  dataset where the decided clause is active at all (VisDrone 37% of
+  medium, VOC 17%) — so those cells are excluded from the band by design;
+  the band holds 20-29% of medium and 45-66% of small centres, i.e. ~44% of
+  the products the first stage has NOT decided. The gated level is not
+  inert there (10% of detections at conf .25), and it hurts: medium-object
+  recall@.25 falls -0.04/-0.07/-0.07, precision and recall both drop, and
+  the training-time val curve sits below the baseline from the first
+  epochs (0.883/0.874/0.866 vs 0.888 at the end), so the loss is in
+  training, not at the operating point. Reading: on dense medium-object
+  shelves a decided product's neighbouring cells are in the band, and
+  their live stride-4 anchors compete with the decided stride-8 anchor
+  for the same product in the one-to-one assignment; the selection changes
+  as the posterior trains, so the target flips between levels. Whether the
+  cost is the 4-level topology itself or the gating is the question the
+  SKU diagnostic (ungated exp001 level, prereg_diag.json) answers. operating point. The switch is therefore not free: where the first
   stage is already decided, the live quarter of the stride-4 level still
   competes in the one-to-one assignment, and on shelves with ~141 medium
   objects per image that competition costs recall. Whether the cost is
