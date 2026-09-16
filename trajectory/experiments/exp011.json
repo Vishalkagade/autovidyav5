@@ -19,7 +19,33 @@
     "mechanism_of_difference": "The gate is the FIRST stage's own posterior band (cells with one-to-one objectness >= B_hi are decided and take no second sample; the top-q of the undecided are re-decided at stride 4): no query head, no query loss, one shared one-to-one assignment. Versus exp001 (same topology): the stride-4 level may only decide inside the band, so on data where stage 1 decides almost everything (normal-object sets) the level is mostly masked \u2014 the pre-registered route to exp001's cross-dataset regression (ins_013). Versus exp008/exp010 (same family): the second decision is made by the P2 head's own level (exp001 capacity) instead of a thin cascade trunk; exp010 measured the band informative (85% of small GT centres at q=0.25 vs 25% random) while its thin second stage could not decide well (ins_016). REGIME ARGUMENT: 68% of VisDrone GT is under one stride-8 cell and 21.5% of GT centres share a stride-8 cell; the P2 head (exp001) fixes this at 3x wall-clock by resampling everywhere. A budgeted second sample on the undecided band is the SPRT answer to 'where is more evidence worth its cost'. On COCO the band is nearly empty of small objects, so the mechanism collapses to the baseline.",
     "regime_argument": "68% of VisDrone GT is under one stride-8 cell and 21.5% of GT centres share a stride-8 cell; the P2 head (exp001) fixes this at 3x wall-clock by resampling everywhere. A budgeted second sample on the undecided band is the SPRT answer to 'where is more evidence worth its cost'. On COCO the band is nearly empty of small objects, so the mechanism collapses to the baseline.",
     "nearest_cv_block": "QueryDet (Yang et al. 2022): sparse high-resolution head computed where a separately-trained small-object query head fires; cascade detectors (Viola-Jones)",
-    "structural_difference": "The gate is the FIRST stage's own posterior band (cells with one-to-one objectness >= B_hi are decided and take no second sample; the top-q of the undecided are re-decided at stride 4): no query head, no query loss, one shared one-to-one assignment. Versus exp001 (same topology): the stride-4 level may only decide inside the band, so on data where stage 1 decides almost everything (normal-object sets) the level is mostly masked \u2014 the pre-registered route to exp001's cross-dataset regression (ins_013). Versus exp008/exp010 (same family): the second decision is made by the P2 head's own level (exp001 capacity) instead of a thin cascade trunk; exp010 measured the band informative (85% of small GT centres at q=0.25 vs 25% random) while its thin second stage could not decide well (ins_016)."
+    "structural_difference": "The gate is the FIRST stage's own posterior band (cells with one-to-one objectness >= B_hi are decided and take no second sample; the top-q of the undecided are re-decided at stride 4): no query head, no query loss, one shared one-to-one assignment. Versus exp001 (same topology): the stride-4 level may only decide inside the band, so on data where stage 1 decides almost everything (normal-object sets) the level is mostly masked \u2014 the pre-registered route to exp001's cross-dataset regression (ins_013). Versus exp008/exp010 (same family): the second decision is made by the P2 head's own level (exp001 capacity) instead of a thin cascade trunk; exp010 measured the band informative (85% of small GT centres at q=0.25 vs 25% random) while its thin second stage could not decide well (ins_016).",
+    "prior_art_search_2026_09_16": {
+      "method": "web search after the trajectory closed (user request); not exhaustive",
+      "closest": [
+        {
+          "work": "QueryDet (Yang, Huang, Wang; CVPR 2022 oral) arXiv:2103.09136",
+          "relation": "coarse low-res pass predicts small-object locations, high-res features computed sparsely there; evaluated on VisDrone; goal = acceleration at equal accuracy. Selection is a POSITIVE signal from a separate query head with its own loss. exp011 selects by the first stage's UNDECIDED band (uncertainty), adds no head or loss, shares one assignment, and is claimed for no-regression transfer, not speed."
+        },
+        {
+          "work": "ESOD (Liu et al.; IEEE TIP 2024) arXiv:2407.16424",
+          "relation": "ObjSeeker objectness mask -> SparseHead on high-res images; positive-signal guided sparse computation."
+        },
+        {
+          "work": "WaldBoost (Sochman & Matas; CVPR 2005) and Matas & Sochman 'Wald's sequential analysis for time-constrained vision problems' (2008)",
+          "relation": "SPRT applied to detection as an early-exit classifier cascade per window; the same source domain and the formal ancestor of 'undecided -> take another measurement'. Not cited in the original P8 audit; should have been."
+        },
+        {
+          "work": "Dynamic Zoom-in Network (Gao et al.; CVPR 2018) arXiv:1711.05187; ViCrop-Det (2026) arXiv:2604.26806",
+          "relation": "entropy/uncertainty of the coarse pass chooses image regions for high-resolution re-detection (crop-level, separate policy/pipeline). Same principle at the image level; exp011 applies it per stride-8 cell inside one single-pass FPN head."
+        },
+        {
+          "work": "DFA-Det (2026, MDPI Processes)",
+          "relation": "high-resolution branch filtered by the coarse branch's semantic confidence (positive-signal gating)."
+        }
+      ],
+      "revised_novelty_claim": "Components are published: coarse-guided sparse high-resolution computation (QueryDet, ESOD), uncertainty-guided zoom (Dynamic Zoom-in, ViCrop-Det), SPRT in detection cascades (WaldBoost). Not found: gating a single-pass detector's fine level by the coarse head's own undecided band with no extra head/loss and a shared one-to-one assignment, evaluated as a no-regression switch across regimes. The novelty is this combination and the evidence (random-gate control, cross-dataset behaviour), narrower than the original audit stated."
+    }
   },
   "stages_run": [
     "S2"
