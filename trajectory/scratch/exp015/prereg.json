@@ -1,0 +1,61 @@
+{
+  "exp": "exp015",
+  "phase": "phase-2",
+  "axis": "R3-coupling",
+  "anchor": "exp011",
+  "written": "2026-09-16 05:20 \u2014 BEFORE any number for negative-trained masking exists",
+  "targets_anchor_profile_fields": [
+    "sku110k.failure_account",
+    "sku110k.per_scale_recall_delta_by_seed"
+  ],
+  "cites_insights": [
+    "ins_022"
+  ],
+  "cites_records": [
+    "trajectory/experiments/exp014.json (per-level breakdown)"
+  ],
+  "mechanism": {
+    "name": "Band-gated stride-4 level with negative-trained masked anchors: in training the level keeps its real outputs and the live mask is enforced in the assigner (masked anchors are never positives, so they are trained as negatives); inference masks as the anchor; selection rule = the anchor's (top-q band, q=0.25, B_hi=0.5)",
+    "kind": "site_wrap + training coupling",
+    "site": "head.detect (4-level yolo26-p2 topology) + loss assigner",
+    "module": "adapters.yolo26n_visdrone_scratch.modules.negmask on bandgate(train_mask='negative')",
+    "family": "sequential-evidence",
+    "params_added_measured": 10652,
+    "params_added_vs_anchor": 0,
+    "source_domain": "sequential_analysis (Wald 1945) for the band; the coupling makes 'no second sample taken' a trained negative decision rather than an absent one"
+  },
+  "novelty_audit": {
+    "nearest_cv_analog": "ignore-region / candidate masking in anchor assignment (ATSS-style ignore masks)",
+    "mechanism_of_difference": "The mask is the band's own live set, changing per image and per iteration; masked anchors are excluded as candidates but still receive the classification loss as negatives, which is what makes them quiet when the band does include them at inference.",
+    "regime_argument": "exp014's breakdown: four gatings lose 0.005 on SKU-110K with 400-600 extra duplicates per 300 images and recall nearly intact; masked anchors receive no negative training in the anchor's implementation."
+  },
+  "datasets_in_order": [
+    "sku110k",
+    "visdrone",
+    "voc"
+  ],
+  "bars": {
+    "sku110k": {
+      "screen_seed42": "PROMOTE iff mAP50(seed 42) >= baseline(seed 42) - 2x SKU floor (0.0016); else KILL",
+      "no_regression_vs_baseline": "seed-avg mAP50 >= baseline - 1x floor AND per-unit vs baseline not significantly unfavorable",
+      "vs_anchor": "P10 per-unit refinement vs anchor: pass (CI > 0) with every seed positive \u2014 REQUIRED",
+      "win_vs_baseline": "recorded if it happens; not required"
+    },
+    "visdrone": {
+      "no_regression_vs_anchor": "seed-avg mAP50 >= anchor - 1x VisDrone floor (0.00497) AND per-unit vs anchor CI not entirely below 0",
+      "vs_baseline": "must still pass P10 vs baseline"
+    },
+    "voc": {
+      "no_regression_vs_baseline": "the prereg_exp011.json bar"
+    }
+  },
+  "discriminators": {
+    "D1_masked_never_positive": "tripwire: stats.pos_on_masked == 0 over all training batches; stride-4 positives > 0",
+    "D2_duplicates_sku": "duplicate count on the 300-image breakdown < 1,160 (ungated 1,010 + 150; anchor 1,238, absband 1,407, ownband 1,262)",
+    "D3_band_kept_on_visdrone": "small-GT band coverage on VisDrone >= 0.80 on every seed",
+    "on_fail": "classify from the bars; a discriminator failure means the account is wrong even if a bar passes"
+  },
+  "classification": "Phase-2 Winner iff all three datasets pass (program.md Phase-2); Hold if direction-consistent but a per-unit test fails; Reject/Kill otherwise. P11 sealed seeds on VisDrone if Winner. A failure closes R3-coupling (P5: exp014 + exp015).",
+  "expected_verdict_prior": "SKU screen PASS ~60%; Phase-2 Winner ~40%.",
+  "budget_estimate_gpu_h": 27
+}

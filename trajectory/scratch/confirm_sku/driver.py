@@ -5,30 +5,34 @@ import argparse, csv, json, os, sys, time, statistics
 P = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")); sys.path.insert(0, P); os.chdir(P)
 HERE = os.path.join(P, "trajectory", "scratch", "confirm_sku"); ST = os.path.join(HERE, "state"); os.makedirs(ST, exist_ok=True)
 CFG = os.path.join(P, "adapters", "yolo26n_visdrone_scratch", "configs")
-YAML = {"baseline": os.path.join(CFG, "yolo26n-sku.yaml"), "mech": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "bandgate": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "sizeband": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "absband": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "ownband": os.path.join(CFG, "yolo26n-p2-sku.yaml")}
-STRIDES = {"baseline": [8, 16, 32], "mech": [4, 8, 16, 32], "bandgate": [4, 8, 16, 32], "sizeband": [4, 8, 16, 32], "absband": [4, 8, 16, 32], "ownband": [4, 8, 16, 32]}
-VARIANTS = ("baseline", "mech", "bandgate", "sizeband", "absband", "ownband")   # bandgate = exp011 anchor; sizeband = exp012 (size-aware band, size_thr from its prereg); both via the SurgeryTrainer pattern
+YAML = {"baseline": os.path.join(CFG, "yolo26n-sku.yaml"), "mech": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "bandgate": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "sizeband": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "absband": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "ownband": os.path.join(CFG, "yolo26n-p2-sku.yaml"), "negband": os.path.join(CFG, "yolo26n-p2-sku.yaml")}
+STRIDES = {"baseline": [8, 16, 32], "mech": [4, 8, 16, 32], "bandgate": [4, 8, 16, 32], "sizeband": [4, 8, 16, 32], "absband": [4, 8, 16, 32], "ownband": [4, 8, 16, 32], "negband": [4, 8, 16, 32]}
+VARIANTS = ("baseline", "mech", "bandgate", "sizeband", "absband", "ownband", "negband")   # bandgate = exp011 anchor; sizeband = exp012 (size-aware band, size_thr from its prereg); both via the SurgeryTrainer pattern
 SIZE_THR = json.load(open(os.path.join(P, "trajectory", "scratch", "exp012", "prereg.json")))["mechanism"]["size_thr_px"]
 B_LO = json.load(open(os.path.join(P, "trajectory", "scratch", "exp013", "prereg.json")))["mechanism"]["b_lo"]
-GATED = {"bandgate": (None, None), "sizeband": (SIZE_THR, None), "absband": (SIZE_THR, B_LO), "ownband": (None, None)}   # variant -> (size_thr, b_lo); ownband = anchor gating + scale-owned assignment (exp014)
+GATED = {"bandgate": (None, None), "sizeband": (SIZE_THR, None), "absband": (SIZE_THR, B_LO), "ownband": (None, None), "negband": (None, None)}   # variant -> (size_thr, b_lo); ownband = + scale-owned assignment (exp014); negband = + negative-trained masking (exp015)
+TRAIN_MASK = {"negband": "negative"}
+from adapters.yolo26n_visdrone_scratch.modules import negmask as NM
 from adapters.yolo26n_visdrone_scratch.modules import scaleowned as SO
 OWN_THR = json.load(open(os.path.join(P, "trajectory", "scratch", "exp014", "prereg.json")))["mechanism"]["own_thr_px"]
 _own_stats = {}
 from adapters.yolo26n_visdrone_scratch.modules import bandgate as BG
 from adapters.yolo26n_visdrone_scratch.modules import chunked_assigner; chunked_assigner.apply()   # SKU-110K density OOMs the assigner every batch with the 4-level head
 BG_PREREG = json.load(open(os.path.join(P, "trajectory", "scratch", "exp011", "prereg.json")))["mechanism"]
-def _bg_ok(net, variant="bandgate"): i = BG.surgery_present(net); return i["class"] == "BandGatedDetect" and i["selection"] == "band" and i["strides"] == [4.0, 8.0, 16.0, 32.0] and (i["size_thr"], i["b_lo"]) == GATED[variant]
+def _bg_ok(net, variant="bandgate"): i = BG.surgery_present(net); return i["class"] == "BandGatedDetect" and i["selection"] == "band" and i["strides"] == [4.0, 8.0, 16.0, 32.0] and (i["size_thr"], i["b_lo"]) == GATED[variant] and i["train_mask"] == TRAIN_MASK.get(variant, "replace")
 def _make_trainer(seed, variant="bandgate"):
     from ultralytics.models.yolo.detect import DetectionTrainer
     class SurgeryTrainer(DetectionTrainer):
         def get_model(self, cfg=None, weights=None, verbose=True):
-            m = super().get_model(cfg=cfg, weights=weights, verbose=verbose); BG.apply_surgery(m, "band", q=BG_PREREG["q"], b_hi=BG_PREREG["b_hi"], seed=seed, size_thr=GATED[variant][0], b_lo=GATED[variant][1]); assert _bg_ok(m, variant); return m
+            m = super().get_model(cfg=cfg, weights=weights, verbose=verbose); BG.apply_surgery(m, "band", q=BG_PREREG["q"], b_hi=BG_PREREG["b_hi"], seed=seed, size_thr=GATED[variant][0], b_lo=GATED[variant][1], train_mask=TRAIN_MASK.get(variant, "replace")); assert _bg_ok(m, variant); return m
     return SurgeryTrainer
 def _check_cb(variant):
     def cb(tr):
         assert _bg_ok(tr.model, variant) and (tr.ema is None or _bg_ok(tr.ema.ema, variant)), "bandgate surgery missing before epoch 1"
         if variant == "ownband":   # exp014: scale-owned assignment attached as the criterion of the trainer-built model (exp004 pattern)
             _own_stats["stats"] = SO.attach(tr.model, own_thr=OWN_THR); assert type(tr.model.criterion.one2many).__name__ == "ScaleOwnedDetectionLoss", "scale-owned loss not attached"
+        if variant == "negband":   # exp015: live-mask assigner (masked anchors never positive, trained as negatives)
+            _own_stats["stats"] = NM.attach(tr.model); assert type(tr.model.criterion.one2many).__name__ == "LiveMaskDetectionLoss", "live-mask loss not attached"
     return cb
 DATA, DATA_S1 = os.path.join(HERE, "sku.yaml"), os.path.join(HERE, "sku_s1.yaml")
 sys.path.insert(0, os.path.join(P, "trajectory", "scratch", "exp000")); from driver import pick_budgets   # the pre-registered budget rule
@@ -58,6 +62,8 @@ def train(variant, epochs, seed, name):
     own = None
     if variant == "ownband":
         ost = _own_stats["stats"]; assert ost["batches"] > 0 and ost["pos_small_level_on_large_gt"] == 0 and ost["pos_small_level"] > 0, f"TRIPWIRE scale-owned assignment: {ost}"; own = dict(ost, criterion=type(tr.model.criterion.one2many).__name__)
+    if variant == "negband":
+        ost = _own_stats["stats"]; assert ost["batches"] > 0 and ost["pos_on_masked"] == 0 and ost["pos_small_level"] > 0, f"TRIPWIRE live-mask assignment: {ost}"; own = dict(ost, criterion=type(tr.model.criterion.one2many).__name__)
     last = YOLO(str(tr.last)); f = last.val(data=DATA, imgsz=640, batch=32, plots=False, verbose=False, device=0)
     if variant in GATED: assert _bg_ok(last.model, variant), "bandgate surgery missing on last.pt"
     return {"variant": variant, "seed": seed, "epochs": epochs, "save_dir": str(tr.save_dir), "tripwire_strides": st, "tripwire_class": type(tr.model.model[-1]).__name__, "tripwire_ownership": own,
@@ -151,7 +157,7 @@ def cmd_assemble(a):
     if ref != "baseline": out["floor_note"] = f"floor here = max-min over the {ref} seeds (reference variant), not the baseline floor"
     _w(("assembly.json" if mv == "mech" else f"assembly_{mv}.json") if ref == "baseline" else f"assembly_{mv}_vs_{ref}.json", out); print("[sku] WIN", "PASS" if out["WIN_PASS"] else "FAIL", f"{mv} vs {ref}", {k: out[k] for k in ("seedavg_delta_map50", "s2_noise_floor")}, out["per_unit"]["ci95"])
 def main():
-    p = argparse.ArgumentParser(); sub = p.add_subparsers(dest="cmd", required=True); sub.add_parser("probe"); asm = sub.add_parser("assemble"); asm.add_argument("--mech-variant", choices=["mech", "bandgate", "sizeband", "absband", "ownband"], default="mech"); asm.add_argument("--ref", choices=["baseline", "bandgate", "mech"], default="baseline")
+    p = argparse.ArgumentParser(); sub = p.add_subparsers(dest="cmd", required=True); sub.add_parser("probe"); asm = sub.add_parser("assemble"); asm.add_argument("--mech-variant", choices=["mech", "bandgate", "sizeband", "absband", "ownband", "negband"], default="mech"); asm.add_argument("--ref", choices=["baseline", "bandgate", "mech"], default="baseline")
     s = sub.add_parser("stage"); s.add_argument("--variant", choices=VARIANTS, required=True); s.add_argument("--seed", type=int, required=True)
     fi = sub.add_parser("finish"); fi.add_argument("--variant", choices=VARIANTS, required=True); fi.add_argument("--seed", type=int, required=True)
     u = sub.add_parser("units"); u.add_argument("--variant", choices=VARIANTS, required=True); u.add_argument("--seed", type=int, required=True); u.add_argument("--weights", required=True)

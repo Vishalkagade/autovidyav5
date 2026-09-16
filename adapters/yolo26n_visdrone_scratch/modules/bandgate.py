@@ -33,6 +33,7 @@ class BandGatedDetect(Detect):
     # set by surgery: q, b_hi, selection ('band'|'random'), gen (torch.Generator, CPU); size_thr (exp012, px or None)
     size_thr = None   # class default: exp011 checkpoints predate the knob
     b_lo = None       # exp013: absolute lower objectness bound (a true two-sided band); None = rank-only (top-q)
+    train_mask = "replace"   # exp015: "negative" = in training keep the real stride-4 outputs (masked anchors are excluded from assignment by the loss and trained as negatives); inference masks as always
 
     def _select(self, scores_l1: torch.Tensor, hw: int, boxes_l1: torch.Tensor = None):
         """scores_l1: (B, nc, h*w) stride-8 one2one logits; boxes_l1: (B, 4, h*w) ltrb in stride units.
@@ -67,10 +68,12 @@ class BandGatedDetect(Detect):
         n0, hw = H2 * W2, h * w
         sel, valid = self._select(one2one["scores"][..., n0:n0 + hw].detach(), hw, one2one["boxes"][..., n0:n0 + hw].detach())
         live = self._live(sel, h, w, valid).unsqueeze(1)           # (B, 1, n0)
-        out = {}
+        out = {}; self.last_live = live[:, 0].detach()             # (B, n0) for a live-mask-aware assigner (exp015)
+        keep_real = self.training and self.train_mask == "negative"
         for name, pr in (("one2many", preds), ("one2one", one2one)):
             if not pr: continue
             s, b = pr["scores"], pr["boxes"]
+            if keep_real: out[name] = {"boxes": b, "scores": s, "feats": pr["feats"]}; continue
             s0 = torch.where(live, s[..., :n0], torch.full_like(s[..., :n0], MASK_LOGIT))
             b0 = torch.where(live, b[..., :n0], torch.zeros_like(b[..., :n0]))
             out[name] = {"boxes": torch.cat([b0, b[..., n0:]], -1), "scores": torch.cat([s0, s[..., n0:]], -1), "feats": pr["feats"]}
@@ -82,11 +85,12 @@ class BandGatedDetect(Detect):
         return y if self.export else (y, out)
 
 
-def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5, seed: int = 0, size_thr: float = None, b_lo: float = None) -> int:
+def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5, seed: int = 0, size_thr: float = None, b_lo: float = None, train_mask: str = "replace") -> int:
     det = det_model.model[-1]; assert type(det).__name__ == "Detect", type(det).__name__
     assert det.nl == 4 and [int(s) for s in det.stride.tolist()] == [4, 8, 16, 32], det.stride
     assert selection in ("band", "random"), selection
-    det.q, det.b_hi, det.selection, det.size_thr, det.b_lo = q, b_hi, selection, size_thr, b_lo
+    assert train_mask in ("replace", "negative"), train_mask
+    det.q, det.b_hi, det.selection, det.size_thr, det.b_lo, det.train_mask = q, b_hi, selection, size_thr, b_lo, train_mask
     det.gen = torch.Generator().manual_seed(seed)
     det.__class__ = BandGatedDetect
     return 0
@@ -95,7 +99,7 @@ def apply_surgery(det_model, selection: str, q: float = 0.25, b_hi: float = 0.5,
 def surgery_present(det_model) -> dict:
     det = det_model.model[-1]
     return {"class": type(det).__name__, "selection": getattr(det, "selection", None), "q": getattr(det, "q", None),
-            "strides": [float(s) for s in det.stride.tolist()], "nl": det.nl, "size_thr": getattr(det, "size_thr", None), "b_lo": getattr(det, "b_lo", None)}
+            "strides": [float(s) for s in det.stride.tolist()], "nl": det.nl, "size_thr": getattr(det, "size_thr", None), "b_lo": getattr(det, "b_lo", None), "train_mask": getattr(det, "train_mask", "replace")}
 
 
 def demo() -> None:
