@@ -22,7 +22,9 @@
     "family": "sequential-evidence",
     "params_added_measured": 10652,
     "params_added_vs_anchor": 0,
-    "source_domain": "sequential_analysis (Wald 1945) for the band; the coupling makes 'no second sample taken' a trained negative decision rather than an absent one"
+    "source_domain": "sequential_analysis (Wald 1945) for the band; the coupling makes 'no second sample taken' a trained negative decision rather than an absent one",
+    "q": 0.25,
+    "b_hi": 0.5
   },
   "novelty_audit": {
     "nearest_cv_analog": "ignore-region / candidate masking in anchor assignment (ATSS-style ignore masks)",
