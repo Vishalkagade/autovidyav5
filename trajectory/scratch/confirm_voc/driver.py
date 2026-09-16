@@ -5,20 +5,26 @@ import argparse, csv, json, os, sys, time, statistics
 P = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")); sys.path.insert(0, P); os.chdir(P)
 HERE = os.path.join(P, "trajectory", "scratch", "confirm_voc"); ST = os.path.join(HERE, "state"); os.makedirs(ST, exist_ok=True)
 CFG = os.path.join(P, "adapters", "yolo26n_visdrone_scratch", "configs")
-YAML = {"baseline": os.path.join(CFG, "yolo26n-voc.yaml"), "mech": os.path.join(CFG, "yolo26n-p2-voc.yaml"), "bandgate": os.path.join(CFG, "yolo26n-p2-voc.yaml")}
-STRIDES = {"baseline": [8, 16, 32], "mech": [4, 8, 16, 32], "bandgate": [4, 8, 16, 32]}
-VARIANTS = ("baseline", "mech", "bandgate")   # bandgate = exp011 (band-gated P2 level, q/B_hi from its prereg) via the SurgeryTrainer pattern
+YAML = {"baseline": os.path.join(CFG, "yolo26n-voc.yaml"), "mech": os.path.join(CFG, "yolo26n-p2-voc.yaml"), "bandgate": os.path.join(CFG, "yolo26n-p2-voc.yaml"), "negband": os.path.join(CFG, "yolo26n-p2-voc.yaml")}
+STRIDES = {"baseline": [8, 16, 32], "mech": [4, 8, 16, 32], "bandgate": [4, 8, 16, 32], "negband": [4, 8, 16, 32]}
+VARIANTS = ("baseline", "mech", "bandgate", "negband")   # bandgate = exp011 anchor; negband = exp015 (negative-trained masked anchors); both via the SurgeryTrainer pattern
+from adapters.yolo26n_visdrone_scratch.modules import negmask as NM
+TRAIN_MASK = {"bandgate": "replace", "negband": "negative"}
+_nm_stats = {}
 from adapters.yolo26n_visdrone_scratch.modules import bandgate as BG
 BG_PREREG = json.load(open(os.path.join(P, "trajectory", "scratch", "exp011", "prereg.json")))["mechanism"]
-def _bg_ok(net): i = BG.surgery_present(net); return i["class"] == "BandGatedDetect" and i["selection"] == "band" and i["strides"] == [4.0, 8.0, 16.0, 32.0]
-def _make_trainer(seed):
+def _bg_ok(net, variant="bandgate"): i = BG.surgery_present(net); return i["class"] == "BandGatedDetect" and i["selection"] == "band" and i["strides"] == [4.0, 8.0, 16.0, 32.0] and i["train_mask"] == TRAIN_MASK[variant]
+def _make_trainer(seed, variant="bandgate"):
     from ultralytics.models.yolo.detect import DetectionTrainer
     class SurgeryTrainer(DetectionTrainer):
         def get_model(self, cfg=None, weights=None, verbose=True):
-            m = super().get_model(cfg=cfg, weights=weights, verbose=verbose); BG.apply_surgery(m, "band", q=BG_PREREG["q"], b_hi=BG_PREREG["b_hi"], seed=seed); assert _bg_ok(m); return m
+            m = super().get_model(cfg=cfg, weights=weights, verbose=verbose); BG.apply_surgery(m, "band", q=BG_PREREG["q"], b_hi=BG_PREREG["b_hi"], seed=seed, train_mask=TRAIN_MASK[variant]); assert _bg_ok(m, variant); return m
     return SurgeryTrainer
-def _check_cb(tr):
-    assert _bg_ok(tr.model) and (tr.ema is None or _bg_ok(tr.ema.ema)), "bandgate surgery missing before epoch 1"
+def _check_cb(variant):
+    def cb(tr):
+        assert _bg_ok(tr.model, variant) and (tr.ema is None or _bg_ok(tr.ema.ema, variant)), "bandgate surgery missing before epoch 1"
+        if variant == "negband": _nm_stats["stats"] = NM.attach(tr.model); assert type(tr.model.criterion.one2many).__name__ == "LiveMaskDetectionLoss", "live-mask loss not attached"
+    return cb
 DATA, DATA_S1 = os.path.join(HERE, "voc.yaml"), os.path.join(HERE, "voc_s1.yaml")
 sys.path.insert(0, os.path.join(P, "trajectory", "scratch", "exp000")); from driver import pick_budgets   # the pre-registered budget rule
 from adapters.yolo26n_visdrone_scratch.adapter import image_f1, _greedy_match, _area_bucket
@@ -39,14 +45,17 @@ def _gt(p):
 def train(variant, epochs, seed, name):
     from ultralytics import YOLO
     t0 = time.time(); m = YOLO(YAML[variant]); kw = {}
-    if variant == "bandgate": kw = {"trainer": _make_trainer(seed)}; m.add_callback("on_pretrain_routine_end", _check_cb)
+    if variant in TRAIN_MASK: kw = {"trainer": _make_trainer(seed, variant)}; m.add_callback("on_pretrain_routine_end", _check_cb(variant))
     m.train(data=DATA_S1, epochs=epochs, imgsz=640, batch=32, seed=seed, device=0, workers=8, amp=True, val=True, plots=False, pretrained=False,
             project=os.path.join(P, "runs_voc"), name=name, exist_ok=True, optimizer="MuSGD", cache="ram", **kw)
     tr = m.trainer; st = [int(s) for s in tr.model.model[-1].stride.tolist()]; assert st == STRIDES[variant], (variant, st)
-    if variant == "bandgate": assert _bg_ok(tr.model) and _bg_ok(tr.ema.ema), "bandgate surgery missing at end"
+    if variant in TRAIN_MASK: assert _bg_ok(tr.model, variant) and _bg_ok(tr.ema.ema, variant), "bandgate surgery missing at end"
+    nm = None
+    if variant == "negband":
+        nst = _nm_stats["stats"]; assert nst["batches"] > 0 and nst["pos_on_masked"] == 0 and nst["pos_small_level"] > 0, f"TRIPWIRE live-mask assignment: {nst}"; nm = dict(nst, criterion=type(tr.model.criterion.one2many).__name__)
     last = YOLO(str(tr.last)); f = last.val(data=DATA, imgsz=640, batch=32, plots=False, verbose=False, device=0)
-    if variant == "bandgate": assert _bg_ok(last.model), "bandgate surgery missing on last.pt"
-    return {"variant": variant, "seed": seed, "epochs": epochs, "save_dir": str(tr.save_dir), "tripwire_strides": st, "tripwire_class": type(tr.model.model[-1]).__name__,
+    if variant in TRAIN_MASK: assert _bg_ok(last.model, variant), "bandgate surgery missing on last.pt"
+    return {"variant": variant, "seed": seed, "epochs": epochs, "save_dir": str(tr.save_dir), "tripwire_strides": st, "tripwire_class": type(tr.model.model[-1]).__name__, "tripwire_negmask": nm,
             "primary": float(f.box.map50), "secondary": {"mAP50_95": float(f.box.map), "precision": float(f.box.mp), "recall": float(f.box.mr)},
             "per_class_ap50": [{"class_name": last.names[int(i)], "value": float(a)} for i, a in zip(f.box.ap_class_index, f.box.ap50)],
             "curve_val500_map50": _curve(str(tr.save_dir)), "wall_min": (time.time() - t0) / 60}
@@ -129,7 +138,7 @@ def cmd_assemble(a):
            "bar_a_map50": d >= -floor, "bar_b_per_unit_not_sig_unfavorable": not sig_unfav, "wall_min": {"baseline": [b[s]["wall_min"] for s in S], "mech": [m[s]["wall_min"] for s in S]}}
     out["NO_REGRESSION_PASS"] = out["bar_a_map50"] and out["bar_b_per_unit_not_sig_unfavorable"]; _w("assembly.json" if mv == "mech" else f"assembly_{mv}.json", out); print("[voc] NO_REGRESSION", "PASS" if out["NO_REGRESSION_PASS"] else "FAIL", {k: out[k] for k in ("seedavg_delta_map50", "voc_s2_noise_floor")}, out["per_unit"]["ci95"])
 def main():
-    p = argparse.ArgumentParser(); sub = p.add_subparsers(dest="cmd", required=True); sub.add_parser("probe"); asm = sub.add_parser("assemble"); asm.add_argument("--mech-variant", choices=["mech", "bandgate"], default="mech")
+    p = argparse.ArgumentParser(); sub = p.add_subparsers(dest="cmd", required=True); sub.add_parser("probe"); asm = sub.add_parser("assemble"); asm.add_argument("--mech-variant", choices=["mech", "bandgate", "negband"], default="mech")
     s = sub.add_parser("stage"); s.add_argument("--variant", choices=VARIANTS, required=True); s.add_argument("--seed", type=int, required=True)
     fi = sub.add_parser("finish"); fi.add_argument("--variant", choices=VARIANTS, required=True); fi.add_argument("--seed", type=int, required=True)
     u = sub.add_parser("units"); u.add_argument("--variant", choices=VARIANTS, required=True); u.add_argument("--seed", type=int, required=True); u.add_argument("--weights", required=True)

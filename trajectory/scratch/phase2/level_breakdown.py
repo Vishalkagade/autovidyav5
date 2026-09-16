@@ -25,7 +25,7 @@ def match(preds, gt):
         elif any(_iou(pb, gb) >= 0.5 for j, (gc, *gb) in enumerate(gt) if j in matched): dup += 1
         else: fp += 1
     return tp, dup, fp
-CK = {"baseline": "runs_sku/sku_baseline_S2_seed42/weights/last.pt", "ungated": "runs_sku/sku_mech_S2_seed42/weights/last.pt", "anchor": "runs_sku/sku_bandgate_S2_seed42/weights/last.pt", "absband": "runs_sku/sku_absband_S2_seed42/weights/last.pt", "ownband": "runs_sku/sku_ownband_S2_seed42/weights/last.pt"}
+import sys as _s; CK = {"negband": "runs_sku/sku_negband_S2_seed42/weights/last.pt"} if "--only-negband" in _s.argv else {"baseline": "runs_sku/sku_baseline_S2_seed42/weights/last.pt", "ungated": "runs_sku/sku_mech_S2_seed42/weights/last.pt", "anchor": "runs_sku/sku_bandgate_S2_seed42/weights/last.pt", "absband": "runs_sku/sku_absband_S2_seed42/weights/last.pt", "ownband": "runs_sku/sku_ownband_S2_seed42/weights/last.pt"}
 out = {}
 for name, w in CK.items():
     m = YOLO(w).model.cuda().eval().float(); det = m.model[-1]; four = det.nl == 4; n0 = 25600 if four else 0
@@ -56,4 +56,4 @@ for name, w in CK.items():
     G = agg["gt"]; out[name] = {"gt": G, "stride4": {"tp": agg["l4"][0], "dup": agg["l4"][1], "fp": agg["l4"][2], "mean_conf": float(np.mean(agg["conf_l4"])) if agg["conf_l4"] else None}, "stride8plus": {"tp": agg["l8"][0], "dup": agg["l8"][1], "fp": agg["l8"][2], "mean_conf": float(np.mean(agg["conf_l8"]))},
                  "recall_all": (agg["l4"][0] + agg["l8"][0]) / G, "f1_mean": float(np.mean(agg["f1_all"])), "f1_mean_no_stride4": float(np.mean(agg["f1_no_l4"]))}
     print(name, json.dumps(out[name]), flush=True)
-json.dump(out, open("trajectory/scratch/phase2/level_breakdown_sku_seed42.json", "w"), indent=1); print("BREAKDOWN_DONE")
+json.dump(out, open("trajectory/scratch/phase2/level_breakdown_sku_seed42" + ("_negband" if "--only-negband" in _s.argv else "") + ".json", "w"), indent=1); print("BREAKDOWN_DONE")
