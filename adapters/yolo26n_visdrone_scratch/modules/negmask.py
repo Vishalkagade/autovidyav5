@@ -20,7 +20,7 @@ class LiveMaskAssigner(TaskAlignedAssigner):
     def get_pos_mask(self, pd_scores, pd_bboxes, gt_labels, gt_bboxes, anc_points, mask_gt):
         mask_in_gts = self.select_candidates_in_gts(anc_points, gt_bboxes, mask_gt)
         if self.n_small:
-            live = self._det_ref[0].last_live.to(mask_in_gts.device)               # (B, n_small)
+            live = self._det_ref[0].last_live.to(mask_in_gts.device); lo, hi = getattr(self, "_chunk", (0, live.shape[0])); live = live[lo:hi]   # (B_chunk, n_small): the OOM path assigns the batch in chunks
             keep = torch.ones_like(mask_in_gts, dtype=torch.bool); keep[..., : self.n_small] = live.unsqueeze(1)
             mask_in_gts = mask_in_gts * keep
         align_metric, overlaps = self.get_box_metrics(pd_scores, pd_bboxes, gt_labels, gt_bboxes, mask_in_gts * mask_gt)

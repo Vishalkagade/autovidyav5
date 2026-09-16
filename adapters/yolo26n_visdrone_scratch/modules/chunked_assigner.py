@@ -15,7 +15,7 @@ _orig_forward = TaskAlignedAssigner.forward
 def _chunked(self, pd_scores, pd_bboxes, anc_points, gt_labels, gt_bboxes, mask_gt, lo, hi):
     """Assign images lo..hi-1 on the GPU, halving on OOM; single images that still OOM take the stock CPU path."""
     try:
-        self.bs, self.n_max_boxes = hi - lo, gt_bboxes.shape[1]
+        self.bs, self.n_max_boxes = hi - lo, gt_bboxes.shape[1]; self._chunk = (lo, hi)   # assigners that read per-image side inputs (negmask) slice by this
         out = self._forward(pd_scores[lo:hi], pd_bboxes[lo:hi], anc_points, gt_labels[lo:hi], gt_bboxes[lo:hi], mask_gt[lo:hi])
     except RuntimeError as e:
         if "out of memory" not in str(e).lower():
