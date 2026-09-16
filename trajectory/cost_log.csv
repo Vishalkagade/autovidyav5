@@ -70,3 +70,4 @@ seed,stage,gpu_hours,cumulative
 7,sku_ungated_diag,3.727,153.368
 42,exp012_sizeband_sku,3.730,157.098
 42,exp013_absband_sku,3.727,160.825
+42,exp014_ownband_sku,3.850,164.675

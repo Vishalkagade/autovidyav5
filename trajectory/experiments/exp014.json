@@ -1,0 +1,167 @@
+{
+  "id": "exp014",
+  "phase": "phase-2",
+  "adapter_name": "yolo26n_visdrone_scratch",
+  "boldness": "bold",
+  "mechanism": {
+    "name": "Band-gated stride-4 level with scale-owned assignment: stride-4 anchors may own (be assigned) only ground truth with longer side < 32 px; selection rule unchanged (anchor's top-q band, q=0.25, B_hi=0.5)",
+    "source_domain": "sequential_analysis (Wald 1945) for the band; the ownership constraint is the SPRT's 'the second sample decides only what the first could not'",
+    "kind": "site_wrap",
+    "family": "sequential-evidence",
+    "site": "head.detect (4-level yolo26-p2 topology) + loss assigner",
+    "params_count": 10652
+  },
+  "cites_baseline_finding_ids": [
+    "fm_small_gt_missed",
+    "fm_dense_scene_f1_collapse"
+  ],
+  "novelty_audit": {
+    "nearest_cv_analog": "per-level scale ranges in FCOS/ATSS-style assignment; QueryDet",
+    "mechanism_of_difference": "The constraint is applied only to the GATED level and only as ownership in the task-aligned assignment (stride-8+ anchors keep every object they can decide; stride 4 may own only sub-cell objects), leaving the selection rule and all other levels' assignment untouched; it exists to break the measured hand-over dynamic (ins_022), not to route scales.",
+    "regime_argument": "ins_022: the anchor's loss on dense medium objects is the stride-8 head ceding products to live stride-4 anchors; forbidding stride 4 from owning objects the stride-8 grid can decide removes the dynamic without touching where the second look is taken.",
+    "nearest_cv_block": "per-level scale ranges in FCOS/ATSS-style assignment; QueryDet",
+    "structural_difference": "The constraint is applied only to the GATED level and only as ownership in the task-aligned assignment (stride-8+ anchors keep every object they can decide; stride 4 may own only sub-cell objects), leaving the selection rule and all other levels' assignment untouched; it exists to break the measured hand-over dynamic (ins_022), not to route scales."
+  },
+  "stages_run": [
+    "S2"
+  ],
+  "metrics_per_stage_per_seed": {
+    "S2": {
+      "42": {
+        "primary": 0.9011491362946121,
+        "secondary": {
+          "mAP50_95": 0.5721522245926463,
+          "precision": 0.8924611601322996,
+          "recall": 0.8225391093113655
+        }
+      }
+    }
+  },
+  "stage1_curve": {
+    "42": [
+      0.12303,
+      0.48289,
+      0.62444,
+      0.69322,
+      0.75385,
+      0.78196,
+      0.80066,
+      0.81879,
+      0.82537,
+      0.83009,
+      0.83371,
+      0.8378,
+      0.84501,
+      0.84597,
+      0.851,
+      0.85235,
+      0.85152,
+      0.85783,
+      0.85971,
+      0.85994,
+      0.85924,
+      0.86362,
+      0.86431,
+      0.86682,
+      0.86634,
+      0.86856,
+      0.87054,
+      0.87124,
+      0.87307,
+      0.87238,
+      0.87478,
+      0.87415,
+      0.87662,
+      0.87715,
+      0.87804,
+      0.8776,
+      0.87838,
+      0.87868,
+      0.8785,
+      0.88135,
+      0.88095,
+      0.87905,
+      0.88089,
+      0.88237,
+      0.88307,
+      0.88204,
+      0.88263,
+      0.88426,
+      0.88422,
+      0.88431,
+      0.8807,
+      0.883,
+      0.88221,
+      0.88409,
+      0.88326,
+      0.8848,
+      0.88359,
+      0.8838,
+      0.88314,
+      0.8837
+    ]
+  },
+  "provenance": {
+    "git_commit": "902018f33abd456d885d205f2959de2d7d530e64",
+    "data_manifest_sha256": "f720015b70cde4734bcf12713d6e0bce99e5b45eec18798871a35523311c9f87",
+    "ultralytics_commit": "b10fa7be231820cea668c52af45b25d07ff65968"
+  },
+  "created_at": "2026-09-16T02:09:33+00:00",
+  "classification": "Kill",
+  "attribution": {
+    "type": "scientific",
+    "subtype": "screened-out",
+    "evidence": "Phase-2 refinement (axis R3-coupling, anchor exp011), SKU-110K seed-42 screen: ownband mAP50 0.9011 vs baseline 0.9054 (delta -0.0042, bar -0.0032) -> KILL; anchor 0.8998. D1 tripwire PASSED: 51550 batches, stride-4 positives 452682395 of 1714632597 (26%), 0 on GT >= 32 px \u2014 ownership was restricted as designed. Per-level breakdown on 300 eval images (conf .25, IoU .5): stride-8+ TP baseline 37451 / anchor 33385 / ownband 31249; stride-4 TP anchor 3668 / ownband 6096; total recall baseline 0.8352 / anchor 0.8263 / ownband 0.8329; F1 without the stride-4 level ownband 0.7779 (anchor 0.8149, baseline 0.8420). Restricting ownership did not restore the coarse head's recall: the loss is not (only) assignment ownership."
+  },
+  "discriminator": {
+    "statement": "stride-4 positives on GT >= 32 px == 0 on every training batch (stats.pos_small_level_on_large_gt), stride-4 positives on small GT > 0 | stride-4 level fully masked at inference costs <= 0.005 mAP50 on SKU (anchor -0.025, absband -0.054): ownership is no longer ceded",
+    "by_seed": {
+      "42": {
+        "D1_pass": true,
+        "tripwire": {
+          "batches": 51550,
+          "pos_small_level": 452682395,
+          "pos_small_level_on_large_gt": 0,
+          "pos_total": 1714632597,
+          "own_thr": 32.0,
+          "criterion": "ScaleOwnedDetectionLoss"
+        },
+        "level_breakdown": {
+          "gt": 44840,
+          "stride4": {
+            "tp": 6096,
+            "dup": 321,
+            "fp": 1574,
+            "mean_conf": 0.5959746755455391
+          },
+          "stride8plus": {
+            "tp": 31249,
+            "dup": 941,
+            "fp": 3743,
+            "mean_conf": 0.7197134093649019
+          },
+          "recall_all": 0.832850133809099,
+          "f1_mean": 0.8364409530439334,
+          "f1_mean_no_stride4": 0.7779239184582174
+        },
+        "band_coverage": {
+          "small": {
+            "covered": 0.6337515819924064,
+            "n": 138275
+          },
+          "medium": {
+            "covered": 0.18619315953516213,
+            "n": 290682
+          },
+          "large": {
+            "covered": 0.28716490658001625,
+            "n": 2462
+          }
+        }
+      }
+    },
+    "pass": false
+  },
+  "cost_gpu_hours": 3.85,
+  "notes": "R3-coupling: first failure. Four gatings (anchor, size clause, absolute band, scale-owned assignment) all lose 0.004-0.006 mAP50 on SKU-110K seed 42 while the ungated level is neutral. Breakdown file: trajectory/scratch/phase2/level_breakdown_sku_seed42.json."
+}
